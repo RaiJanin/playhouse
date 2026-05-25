@@ -79,12 +79,13 @@ class SmsBlastController extends Controller
         {
             $dateTimeEx = $data['scheduled_date'] . ' ' . $data['scheduled_time'];
             $recipients = $request->input('recipient_ids', []);
+            $slug = !empty($data['slug']) ? $data['slug'] : Str::slug($data['title']);
 
             $castRequests = [
                 'title' => $data['title'],
                 'message' => $data['message'],
                 'status' => SmsBlast::STATUS_DRAFT,
-                'slug' => !empty($data['slug']) ?? Str::slug($data['title']),
+                'slug' => $slug,
                 'total_recipients' => count($recipients),
                 'type' => $data['type'],
                 'send_mode' => $data['send_mode'],
