@@ -74,6 +74,7 @@ class NotifyBirthdays extends Command
         if(!$result['success'])
         {
             $this->info("Error: ".$result['message']);
+            return Command::FAILURE;
         }
 
         $this->info("Birthday greetings processed.");
