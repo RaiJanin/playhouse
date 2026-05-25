@@ -19,6 +19,7 @@ class RunCommandsViaHttp extends Controller
         } catch (\Throwable $e) {
 
             $logs[] = "✖ {$command} failed: " . $e->getMessage();
+            $logs[] = "trace: {$e->getTraceAsString()}";
         }
     }
     private function initiateScheduler($request, callable $callback)
