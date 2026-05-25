@@ -71,6 +71,11 @@ class NotifyBirthdays extends Command
             $recipientIds
         );
 
+        if(!$result['success'])
+        {
+            $this->error($result['message']);
+        }
+
         $this->info("Birthday greetings processed.");
         $this->info("Sent: {$result['sent']}");
         $this->info("Failed: {$result['failed']}");
