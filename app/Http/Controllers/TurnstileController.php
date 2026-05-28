@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use App\Models\OrderItems;
-use App\Services\SendSmsService;
 use Carbon\Carbon;
 
 class TurnstileController extends Controller
@@ -21,9 +19,9 @@ class TurnstileController extends Controller
         ]);
 
         $qrCode = $request->qr;
-        $status = strtolower($request->status); 
+        $status = strtolower($request->status);
         $time = $request->time ? Carbon::parse($request->time) : now();
-        
+
         try
         {
             DB::beginTransaction();
@@ -60,16 +58,16 @@ class TurnstileController extends Controller
             {
                 $action = 'none';
 
-                switch ($status) 
+                switch ($status)
                 {
                     case 'entrance':
-                        if ($orderItem->ckout) 
+                        if ($orderItem->ckout)
                         {
                             $action = "<pre>Ignored(already checked-out)</pre>";
                             break;
                         }
                         // FIRST CHECK-IN
-                        if (!$orderItem->ckin) 
+                        if (!$orderItem->ckin)
                         {
                             $orderItem->ckin = $time;
                             $orderItem->isfreeze = false;
@@ -77,7 +75,7 @@ class TurnstileController extends Controller
                             break;
                         }
                         // RESUME FROM FREEZE, and ensure all of the break times are empty
-                        if ($orderItem->isfreeze && empty($orderItem->bkout4)) 
+                        if ($orderItem->isfreeze && empty($orderItem->bkout4))
                         {
                             $orderItem->isfreeze = false;
 
@@ -85,7 +83,7 @@ class TurnstileController extends Controller
                             {
                                 $orderItem->bkout = $time;
                                 $action = "<pre>Resume from freeze</pre>";
-                            } 
+                            }
                             else if(!empty($orderItem->bkout) && empty($orderItem->bkout1))
                             {
                                 $orderItem->bkout1 = $time;
@@ -116,8 +114,8 @@ class TurnstileController extends Controller
                             $action = "<pre>Ignored(not checked-in, proceed to entrance)</pre>";
                             break;
                         }
-                        
-                        if (empty($orderItem->bkin4)) 
+
+                        if (empty($orderItem->bkin4))
                         {
                             $orderItem->isfreeze = true;
 
@@ -125,7 +123,7 @@ class TurnstileController extends Controller
                             {
                                 $orderItem->bkin = $time;
                                 $action = "<pre>Frozen</pre>";
-                            } 
+                            }
                             else if(!empty($orderItem->bkin) && empty($orderItem->bkin1))
                             {
                                 $orderItem->bkin1 = $time;
@@ -209,7 +207,7 @@ class TurnstileController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
         }
-        
+
     }
 
     public function curlRequest(Request $request)
@@ -231,7 +229,7 @@ class TurnstileController extends Controller
 
         $jsonData = json_encode($data);
 
-        $url = env('APP_URL') . "api/turnstile-srch"; 
+        $url = env('APP_URL') . "api/turnstile-srch";
 
         $ch = curl_init($url);
 

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MimoAdminController;
 use App\Http\Controllers\FileManagementController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SmsBlastController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,8 @@ Route::prefix('admin-panel')->middleware('auth')->group(function () {
         Route::delete('/{smsBlast}', [SmsBlastController::class, 'destroy'])->name('destroy');
         Route::get('/templates', [SmsBlastController::class, 'templates'])->name('templates');
     });
+
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
 });
 
 Route::put('/admin/order-item/{selectedId}', [MimoAdminController::class, 'updateQr'])->name('order.updateQr');

@@ -174,7 +174,6 @@ class SmsBlastService
             SmsBlastRecipient::insert($newRecipients);
         }
 
-        // Update blast recipient count
         $blast->update(['total_recipients' => $blast->recipients()->count()]);
     }
 

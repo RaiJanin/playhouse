@@ -39,7 +39,7 @@
         </div>
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <div class="text-sm text-gray-500">Pending</div>
-            <div class="text-2xl font-bold">{{ $smsBlast->total_recipients - $smsBlast->sent_count - $smsBlast->failed_count }}</div>
+            <div class="text-2xl font-bold">{{ $smsBlast->total_recipients - ($smsBlast->sent_count - $smsBlast->failed_count) }}</div>
         </div>
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <div class="text-sm text-gray-500">Success Rate</div>

@@ -43,7 +43,7 @@ return new class extends Migration
             updated_at TIMESTAMP NULL,
             CONSTRAINT sms_blast_recipients_sms_blast_id_fk
                 FOREIGN KEY (sms_blast_id)
-                REFERENCES sms_blasts(id)
+                REFERENCES rssys.sms_blasts(id)
                 ON DELETE CASCADE
         );
 

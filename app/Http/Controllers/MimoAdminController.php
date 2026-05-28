@@ -3,16 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\M06;
 use App\Models\M06Guardian;
 use App\Models\M06Child;
-use App\Models\Orders;
 use App\Models\OrderItems;
-use App\Models\Market;
-use App\Models\DurationPrices;
-use App\Models\ItemsPrices;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
 
 class MimoAdminController extends Controller
@@ -36,7 +29,7 @@ class MimoAdminController extends Controller
 
         return $this->dateFilters($query, $request, $startDate, $endDate, $column);
     }
-    
+
     private function allItemsQuery($request, $startDate, $endDate, $status)
     {
         $query = $this->baseOrderQuery($request, $startDate, $endDate, 'created_at');
@@ -80,7 +73,7 @@ class MimoAdminController extends Controller
         $totalGuardians = M06Guardian::count();
         $totalCheckouts = OrderItems::whereNotNull('ckout')->count();
         $totalSocks = OrderItems::sum('socksqty');
-        
+
         $statusMonitor = [
             'in_house_guardians' => $inHouseGuardians,
             'in_house_kids' => $inHouseKids,
@@ -92,11 +85,11 @@ class MimoAdminController extends Controller
             'socks_sold' => $totalSocks,
             'overdue' => $overdueCount,
         ];
-        
+
         $orderItems = $this->allItemsQuery($request, $startDate, $endDate, $request->query('status'));
-        
+
         $columns = \DB::getSchemaBuilder()->getColumnListing('ordlne_ph');
-        
+
         $labels = [
             'id' => 'ID',
             'ord_code_ph' => 'Order Code',
@@ -116,7 +109,7 @@ class MimoAdminController extends Controller
             'ckin' => 'Checked In',
             'ckout' => 'Checked Out',
         ];
-        
+
         return view('pages.admin-panel.dashboard', compact('orderItems', 'columns', 'labels', 'statusMonitor'));
     }
 
@@ -140,32 +133,32 @@ class MimoAdminController extends Controller
     public function monitoring(Request $request)
     {
         try{
-            
+
             $startDate = $request->query('start_date');
             $endDate = $request->query('end_date');
-            
+
             $query = OrderItems::query();
             $query->whereNotNull('ckin')->whereNull('ckout');
             $this->dateFilters($query, $request, $startDate, $endDate, 'ckin');
 
             $meta = $query->select([
-                    'id', 
-                    'd_code_child', 
-                    'ord_code_ph', 
-                    'ckin', 
-                    'ckout', 
+                    'id',
+                    'd_code_child',
+                    'ord_code_ph',
+                    'ckin',
+                    'ckout',
                     'durationhours',
                     'qr_child',
                     'qr_guardian',
                 ])->with([
-                    'child:d_code_c,firstname,lastname', 
+                    'child:d_code_c,firstname,lastname',
                     'order:ord_code_ph,d_code',
                     'order.parentPl:d_code,d_name'
                 ])->where(
                     function ($search) use ($request) {
                         $search->where('qr_child', 'like', '%' . $request->query('search') . '%')
                             ->orWhere('qr_guardian', 'like', '%' . $request->query('search') . '%')
-                            ->orWhereHas('child', 
+                            ->orWhereHas('child',
                                 function ($childSearch) use ($request) {
                                     $childSearch->where('firstname', 'like', '%' . $request->query('search') . '%');
                                 }
@@ -211,7 +204,7 @@ class MimoAdminController extends Controller
                             $item->status = "due";
                         }
                     }
-                    
+
                     return $item;
                 })->withQueryString();
 
@@ -227,6 +220,6 @@ class MimoAdminController extends Controller
                 'trace' => 'Trace: '.$e->getTraceAsString(),
             ]);
         }
-        
+
     }
 }
