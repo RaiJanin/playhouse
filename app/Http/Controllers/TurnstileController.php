@@ -178,7 +178,10 @@ class TurnstileController extends Controller
 
             DB::commit();
 
-            app(MonitoringService::class)->broadcastUpdated();
+            if(env('VITE_REALTIME_OPTION') === 'websocket')
+            {
+                app(MonitoringService::class)->broadcastUpdated();
+            }
 
             return response()->json([
                 'message' => 'Processed Successfully',
