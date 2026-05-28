@@ -23,3 +23,4 @@ Route::get('/monitoring', function () { return view('pages.playhouse-monitoring'
 require __DIR__.'/http-reqs.php';
 require __DIR__.'/admin-panel.php';
 require __DIR__.'/auth.php';
+require __DIR__.'/test-route.php';

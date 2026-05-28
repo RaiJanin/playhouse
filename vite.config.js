@@ -5,14 +5,17 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css',
-                    'resources/js/app.js',
-                    'resources/js/dependencies.js',
-                    'resources/js/admin-app.js',
-                    'resources/js/modules/playhouseCheckout.js',
-                    'resources/js/modules/playhouseCheckinSource.js',
-                    'resources/js/modules/admin-panel-create.js',
-                    'resources/js/modules/playhouse-monitoring.js',],
+            input: [
+                "resources/css/app.css",
+                "resources/js/app.js",
+                "resources/js/dependencies.js",
+                "resources/js/admin-app.js",
+                "resources/js/modules/playhouseCheckout.js",
+                "resources/js/modules/playhouseCheckinSource.js",
+                "resources/js/modules/admin-panel-create.js",
+                "resources/js/modules/playhouse-monitoring-polling.js",
+                "resources/js/modules/playhouse-monitoring-websocket.js",
+            ],
             refresh: true,
         }),
         tailwindcss(),

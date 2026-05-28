@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\OrderItems;
+use App\Services\MonitoringService;
 use Carbon\Carbon;
 
 class TurnstileController extends Controller
@@ -177,15 +178,7 @@ class TurnstileController extends Controller
 
             DB::commit();
 
-            $message = "NOTICE FROM CLOUD MIMO\n\n";
-            if ($hasSuccess && count($validActions) > 0) {
-                $message .= "Here are the latest updates:\n\n";
-                $message .= implode("\n", $validActions);
-
-                //SendSmsService::sendnowsms('09228480788', $message); //Sir noei's
-                // SendSmsService::sendnowsms('09158060792', $message); //sir paul's
-                // SendSmsService::sendnowsms('9945425408', $message); //Janin's
-            }
+            app(MonitoringService::class)->broadcastUpdated();
 
             return response()->json([
                 'message' => 'Processed Successfully',

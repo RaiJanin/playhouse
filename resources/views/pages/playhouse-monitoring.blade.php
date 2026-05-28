@@ -3,7 +3,11 @@
 @section('title', 'Monitoring - Playhouse')
 
 @section('scripts')
-    @vite('resources/js/modules/playhouse-monitoring.js')
+    @if(env('VITE_REALTIME_OPTION') === 'polling')
+        @vite('resources/js/modules/playhouse-monitoring-polling.js')
+    @elseif (env('VITE_REALTIME_OPTION') === 'websocket')
+        @vite('resources/js/modules/playhouse-monitoring-websocket.js')
+    @endif
 @endsection
 
 @section('contents')
