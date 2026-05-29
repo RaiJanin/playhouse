@@ -72,6 +72,7 @@ class MimoAdminController extends Controller
         $totalKids = M06Child::count();
         $totalGuardians = M06Guardian::count();
         $totalCheckouts = OrderItems::whereNotNull('ckout')->count();
+        $todaySales = OrderItems::whereDate('ckin', $now)->count();
         $totalSocks = OrderItems::sum('socksqty');
 
         $statusMonitor = [
@@ -164,7 +165,15 @@ class MimoAdminController extends Controller
                                 }
                             );
                     }
-                )->orderBy('ckin', 'desc')
+                )->orderByRaw("
+                    CASE
+                        WHEN ckout IS NULL
+                        AND durationhours != 5
+                        AND NOW() > (ckin + (durationhours * INTERVAL '1 hour'))
+                        THEN 0
+                        ELSE 1
+                    END
+                ")->orderBy('ckin', 'desc')
                 ->paginate(20)
                 ->through(function ($item){
                     $now = Carbon::now();

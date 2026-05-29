@@ -68,7 +68,7 @@ const parseItem = (item) => {
     } else if(item.status === 'due') {
         checkStatus = `<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Due</span>`;
     } else if(item.status === 'normal') {
-        checkStatus = `<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Due</span>`;
+        checkStatus = `<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Normal</span>`;
     }
 
     return {

@@ -522,6 +522,7 @@ class PlayHouseController extends Controller
         $request->merge([
             'start_date' => $request->input('start_date', now()->format('Y-m-d')),
             'end_date'   => $request->input('end_date', now()->format('Y-m-d')),
+            'sort' => $request->input('sort', 'ckin'),
         ]);
 
         $startDate = $request->query('start_date');
@@ -604,6 +605,19 @@ class PlayHouseController extends Controller
                             }
                         );
                 }
+            )->when($request->input('sort') === 'ckin', 
+                function ($q) 
+                {
+                    $q->orderByRaw("
+                        CASE
+                            WHEN ckout IS NULL
+                            AND durationhours != 5
+                            AND NOW() > (ckin + (durationhours * INTERVAL '1 hour'))
+                            THEN 0
+                            ELSE 1
+                        END
+                    ");
+                }
             )->orderBy('created_at', 'desc')
               ->paginate(20)
               ->through(function ($item){
@@ -611,7 +625,12 @@ class PlayHouseController extends Controller
 
                     if($item->durationhours === 5)
                     {
+                        if(empty($item->ckin))
+                        {
+                            $item->status = "booked";
+                        }
                         $item->remainmins = "unlimited";
+                        $item->status = "normal";
                     }
                     else if(!empty($item->ckin) && empty($item->ckout))
                     {
@@ -624,14 +643,32 @@ class PlayHouseController extends Controller
                         $hours = floor($remainingMinutes / 60);
                         $minutes = $remainingMinutes % 60;
                         $item->remainmins = "{$hours}hr {$minutes}min";
+                        $item->status = "normal";
                     }
                     else if(!empty($item->ckin) && !empty($item->ckout))
                     {
                         $item->remainmins = 'done';
+                        $item->status = "done";
                     }
-                    else
+                    else if(empty($item->ckin))
                     {
                         $item->remainmins = "0hr 0min";
+                        $item->status = "booked";
+                    }
+
+                    if(!$item->ckout && !empty($item->ckin))
+                    {
+                        $checkin = Carbon::parse($item->ckin);
+                        $due = $checkin->copy()->addHours($item->durationhours);
+
+                        $lateMinutes = $due->diffInMinutes($now);
+
+                        if ($lateMinutes <= 30) {
+                            $item->status = "due";
+                        } else {
+                            $item->status = "overdue";
+                        }
+                        
                     }
 
                     return $item;

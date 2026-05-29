@@ -14,6 +14,17 @@
             </select>
         </div>
         <div class="flex flex-col">
+            <label for="sort" class="block text-sm font-semibold text-gray-700 mb-1">Sort by</label>
+            <select 
+                id="sort" 
+                name="sort" 
+                class="bg-white w-full px-4 py-2 border border-[var(--color-primary)] shadow rounded-xl font-semibold focus:outline-none focus:border-[var(--color-primary-lighter)] focus:shadow-none transition-all duration-300"
+            >
+                <option value="created_at" {{ request('sort') === 'created_at' ? 'selected' : '' }}>Date Booked</option>
+                <option value="ckin" {{ request('sort') === 'ckin' ? 'selected' : '' }}>Checked-In</option>
+            </select>
+        </div>
+        <div class="flex flex-col">
             <label for="start_date" class="block text-sm font-semibold text-gray-700 mb-1">From Date</label>
             <input 
                 type="date" 
@@ -97,6 +108,9 @@
                     Duration Hours
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Checked In
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -149,6 +163,25 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        @if($item->status === 'normal')
+                            {!!
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Normal</span>'
+                            !!}
+                        @elseif ($item->status === 'due')
+                            {!!
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Due</span>'
+                            !!}
+                        @elseif ($item->status === 'overdue')
+                            {!!
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-red-100 text-red-800">Overdue</span>'
+                            !!}
+                        @elseif ($item->status === 'booked')
+                            {!!
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Booked</span>'
+                            !!}
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {!! $item->ckin ? 
                             \Carbon\Carbon::parse($item->ckin)->format('M d, Y h:i A') 
                             : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-200 text-gray-800">Not started</span>' 
@@ -179,7 +212,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    <td colspan="10" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                         No order items found.
                     </td>
                 </tr>
