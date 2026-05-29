@@ -3,9 +3,9 @@
 @section('title', 'Monitoring - Playhouse')
 
 @section('scripts')
-    @if(env('VITE_REALTIME_OPTION') === 'polling')
+    @if(env('APP_REALTIME_METHOD') === 'polling')
         @vite('resources/js/modules/playhouse-monitoring-polling.js')
-    @elseif (env('VITE_REALTIME_OPTION') === 'websocket')
+    @elseif (env('APP_REALTIME_METHOD') === 'websocket')
         @vite('resources/js/modules/playhouse-monitoring-websocket.js')
     @endif
 @endsection
