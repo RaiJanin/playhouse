@@ -195,17 +195,21 @@ class MimoAdminController extends Controller
 
                     if(!$item->ckout)
                     {
-                        if($now->copy()->subMinutes(30) > $item->ckin)
-                        {
+                        $checkin = Carbon::parse($item->ckin);
+                        $due = $checkin->copy()->addHours($item->durationhours);
+
+                        $lateMinutes = $due->diffInMinutes($now);
+
+                        if ($lateMinutes <= 30) {
+                            $item->status = "due";
+                        } else {
                             $item->status = "overdue";
                         }
-                        else if($now->copy() >= $item->ckin && $now->copy()->subMinutes(30) <= $item->ckin)
-                        {
-                            $item->status = "due";
-                        }
+                        
                     }
 
                     return $item;
+
                 })->withQueryString();
 
             return response()->json([

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\OrderItems;
+use App\Models\TurnstileLogs;
 use App\Services\MonitoringService;
 use Carbon\Carbon;
 
@@ -166,6 +167,11 @@ class TurnstileController extends Controller
 
                 $cleanAction = strip_tags($action);
 
+                TurnstileLogs::create([
+                    'datetime' => Carbon::now(),
+                    'context' => "{$orderItem->child->firstname} {$orderItem->child->lastname}. QR:{$orderItem->qr_child} - {$cleanAction}"
+                ]);
+
                 if ($action !== "<pre>Ignored(already active)</pre>" && $action !== "<pre>Ignored(cannot freeze)</pre>") {
                     $hasSuccess = true;
 
@@ -197,6 +203,11 @@ class TurnstileController extends Controller
 
         } catch(\Exception $e) {
             DB::rollback();
+
+            TurnstileLogs::create([
+                'datetime' => Carbon::now(),
+                'context' => $e->getMessage()
+            ]);
 
             return response()->json([
                 'error' => $e->getMessage(),
