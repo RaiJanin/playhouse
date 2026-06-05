@@ -36,7 +36,11 @@ Route::prefix('admin-panel')->middleware('auth')->group(function () {
         Route::get('/templates', [SmsBlastController::class, 'templates'])->name('templates');
     });
 
-    Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+    // Reports Routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/{mimo_report}', [ReportsController::class, 'index'])->name('index');
+        Route::get('/{mimo_report}/export/{format}', [ReportsController::class, 'export'])->name('export');
+    });
 });
 
 Route::put('/admin/order-item/{selectedId}', [MimoAdminController::class, 'updateQr'])->name('order.updateQr');
