@@ -79,7 +79,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Transactions</div>
-                    <div class="text-2xl font-bold text-white mt-1">{{ $totals['total_transactions'] }}</div>
+                    <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_transactions']) }}</div>
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Sales</div>
@@ -91,7 +91,7 @@
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Socks</div>
-                    <div class="text-2xl font-bold text-white mt-1">{{ $totals['total_socks'] }}</div>
+                    <div class="text-2xl font-bold text-white mt-1">{{ number_format( $totals['total_socks']) }}</div>
                 </div>
             </div>
 

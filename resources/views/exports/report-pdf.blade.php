@@ -99,10 +99,10 @@
                 <th>Total Socks</th>
             </tr>
             <tr class="numbers">
-                <th>{{ $report['totals']['total_transactions'] ?? 0 }}</th>
+                <th>{{ number_format( $report['totals']['total_transactions'] ?? 0) }}</th>
                 <th>₱{{ number_format($report['totals']['total_sales'] ?? 0, 2) }}</th>
                 <th>{{ number_format($report['totals']['total_duration'] ?? 0, 2) }} ₱/hour</th>
-                <th>{{ $report['totals']['total_socks'] }}</th>
+                <th>{{ number_format($report['totals']['total_socks']) }}</th>
             </tr>
         </thead>
     </table>

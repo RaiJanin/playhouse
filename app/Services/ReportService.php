@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ReportService
 {
@@ -102,25 +103,22 @@ class ReportService
     private function outletSalesReport(mixed $startDate, mixed $endDate): array
     {
         $items = $this->baseQuery($startDate, $endDate)
-            ->with(['order.parentPl'])
+            ->with(['order'])
             ->get();
 
-        $grouped = $items->groupBy(function ($item) {
-            return $item->order?->parentPl?->d_code ?? 'UNKNOWN';
-        })->map(function ($group) {
-            $parent = $group->first()->order?->parentPl;
-            return [
-                'outlet_code'        => $parent?->d_code ?? 'UNKNOWN',
-                'outlet'             => $parent?->d_name ?? 'UNKNOWN',
-                'transaction_count'  => $group->count(),
-                'total_items'        => $group->count(),
-                'total_sales'        => $group->sum('subtotal'),
-                'total_duration'     => $group->sum('durationsubtotal'),
-                'total_socks'        => $group->sum('socksqty'),
-            ];
-        })->values();
+        $outlet = DB::table('outlet')->select('out_code', 'out_desc')->first();
 
-        return ['data' => $grouped, 'totals' => $this->buildTotals($items)];
+        $summary = [
+            'outlet_code'       => $outlet->out_code,
+            'outlet'            => $outlet->out_desc,
+            'transaction_count' => number_format($items->pluck('ord_code_ph')->unique()->count()),
+            'total_items'       => number_format($items->count()),
+            'total_sales'       => number_format($items->sum('subtotal'), 2) ,
+            'total_duration'    => number_format($items->sum('durationsubtotal'), 2) ,
+            'total_socks'       => number_format($items->sum('socksqty')),
+        ];
+
+        return ['data' => collect([$summary]), 'totals' => $this->buildTotals($items)];
     }
 
     private function transactionReport(mixed $startDate, mixed $endDate, mixed $request): array
@@ -152,11 +150,11 @@ class ReportService
             return [
                 'guardian_code'       => $parent?->d_code ?? 'UNKNOWN',
                 'guardian'            => $parent?->d_name ?? 'UNKNOWN',
-                'transaction_count'   => $group->count(),
-                'total_items'         => $group->count(),
-                'total_sales'         => $group->sum('subtotal'),
-                'total_duration'      => $group->sum('durationsubtotal'),
-                'total_socks'         => $group->sum('socksqty'),
+                'transaction_count'   => number_format($group->count()),
+                'total_items'         => number_format($group->count()) ,
+                'total_sales'         => number_format($group->sum('subtotal'), 2),
+                'total_duration'      => number_format($group->sum('durationsubtotal'), 2) ,
+                'total_socks'         => number_format($group->sum('socksqty')),
                 'children'            => $children ?: 'N/A',
             ];
         })->values();
@@ -185,11 +183,11 @@ class ReportService
             $hourItems = $grouped->get($hour, collect());
             return [
                 'hour'              => $label,
-                'transaction_count' => $hourItems->count(),
-                'total_items'       => $hourItems->count(),
-                'total_sales'       => $hourItems->sum('subtotal'),
-                'total_duration'    => $hourItems->sum('durationsubtotal'),
-                'total_socks'       => $hourItems->sum('socksqty'),
+                'transaction_count' => number_format($hourItems->count()),
+                'total_items'       => number_format($hourItems->count()),
+                'total_sales'       => number_format($hourItems->sum('subtotal'), 2),
+                'total_duration'    => number_format($hourItems->sum('durationsubtotal'), 2),
+                'total_socks'       => number_format($hourItems->sum('socksqty')),
             ];
         })->values();
 
@@ -210,12 +208,12 @@ class ReportService
             return [
                 'item_id'           => $price->id ?? null,
                 'item_name'         => $price->label ?? 'UNKNOWN',
-                'unit_price'        => $price->price ?? 0,
-                'unit_count'        => $group->count(),
-                'total_quantity'    => $group->sum('socksqty') + $group->count(),
-                'total_sales'       => $group->sum('subtotal'),
-                'total_duration'    => $group->sum('durationsubtotal'),
-                'total_socks'       => $group->sum('socksqty'),
+                'unit_price'        => number_format($price->price ?? 0, 2),
+                'unit_count'        => number_format($group->count()),
+                'total_quantity'    => number_format($group->sum('socksqty') + $group->count()),
+                'total_sales'       => number_format($group->sum('subtotal'), 2),
+                'total_duration'    => number_format($group->sum('durationsubtotal'),  2),
+                'total_socks'       => number_format($group->sum('socksqty')),
             ];
         })->values();
 
