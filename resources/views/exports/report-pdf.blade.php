@@ -48,7 +48,7 @@
     <table>
         <thead>
             <tr>
-                @foreach(array_keys((array) $report['data']) as $header)
+                @foreach(array_keys((array) $report['data']->first()) as $header)
                     <th>{{ str_replace('_', ' ', ucfirst($header)) }}</th>
                 @endforeach
             </tr>

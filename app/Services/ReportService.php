@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class ReportService
 {
-    public function getReport(Request $request, $mimo_report): array
+    public function getReport(Request $request, string $mimo_report): array
     {
         $reportType = $this->resolveReportType($mimo_report);
         $startDate  = $this->resolveDate($request, 'start_date');
@@ -31,7 +31,7 @@ class ReportService
         ];
     }
 
-    public function generateReport(Request $request, $mimo_report): array
+    public function generateReport(Request $request, string $mimo_report): array
     {
         $reportType = $this->resolveReportType($mimo_report);
         $startDate  = $this->resolveDate($request, 'start_date');
@@ -53,7 +53,7 @@ class ReportService
         ];
     }
 
-    private function resolveReportType($mimo_report): MimoReport
+    private function resolveReportType(string $mimo_report): MimoReport
     {
         $report = MimoReport::tryFrom($mimo_report);
         if (!$report) {
@@ -62,20 +62,20 @@ class ReportService
         return $report;
     }
 
-    private function resolveDate($request, string $key): Carbon
+    private function resolveDate(mixed $request, string $key): Carbon
     {
         $dateStr = $request->query($key) ?? now()->format('Y-m-d');
         return Carbon::parse($dateStr);
     }
 
-    private function baseQuery($startDate, $endDate)
+    private function baseQuery(mixed $startDate, mixed $endDate)
     {
         return OrderItems::query()
             ->whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->whereNotNull('subtotal');
     }
 
-    private function buildTotals($items): array
+    private function buildTotals(mixed $items): array
     {
         return [
             'total_transactions' => $items->count(),
@@ -85,7 +85,7 @@ class ReportService
         ];
     }
 
-    private function outletSalesReport($startDate, $endDate): array
+    private function outletSalesReport(mixed $startDate, mixed $endDate): array
     {
         $items = $this->baseQuery($startDate, $endDate)
             ->with(['order.parentPl'])
@@ -109,7 +109,7 @@ class ReportService
         return ['data' => $grouped, 'totals' => $this->buildTotals($items)];
     }
 
-    private function cashierReport($startDate, $endDate, $request): array
+    private function cashierReport(mixed $startDate, mixed $endDate, mixed $request): array
     {
         $items = $this->baseQuery($startDate, $endDate)
             ->with(['order.parentPl', 'child'])
@@ -150,7 +150,7 @@ class ReportService
         return ['data' => $grouped, 'totals' => $this->buildTotals($items)];
     }
 
-    private function hourSalesReport($startDate, $endDate): array
+    private function hourSalesReport(mixed $startDate, mixed $endDate): array
     {
         $items = OrderItems::query()
             ->whereBetween('ckin', [$startDate, $endDate->endOfDay()])
@@ -182,7 +182,7 @@ class ReportService
         return ['data' => $data, 'totals' => $this->buildTotals($items)];
     }
 
-    private function itemSalesReport($startDate, $endDate): array
+    private function itemSalesReport(mixed $startDate, mixed $endDate): array
     {
         $items = $this->baseQuery($startDate, $endDate)
             ->whereHas('durationhoursprices')

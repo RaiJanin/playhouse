@@ -10,7 +10,7 @@ class ReportsController extends Controller
 {
     private string $page = 'pages.admin-panel.reports';
 
-    public function index(Request $request, ReportService $reportService, $mimo_report)
+    public function index(Request $request, ReportService $reportService, string $mimo_report)
     {
         $reportType = MimoReport::tryFrom($mimo_report);
 
@@ -33,7 +33,7 @@ class ReportsController extends Controller
         ]);
     }
 
-    public function export(Request $request, ReportService $reportService, $mimo_report, $format)
+    public function export(Request $request, ReportService $reportService, string $mimo_report, string $format)
     {
         $reportType = MimoReport::tryFrom($mimo_report);
         if (!$reportType) {

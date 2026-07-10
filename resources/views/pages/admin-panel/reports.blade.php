@@ -9,32 +9,32 @@
         </div>
 
         <div class="p-6">
-            <div class="bg-[var(--color-primary-dark)] rounded-lg shadow-md p-6 mb-6">
+            <div class="bg-[var(--color-accent-mid-dark)] rounded-lg shadow-md p-6 mb-6">
                 <form method="GET" action="{{ route('reports.index', $reportType->value) }}" class="flex flex-wrap items-end gap-4">
                     <input type="hidden" name="mimo_report" value="{{ $reportType->value }}">
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-100 mb-1">Start Date</label>
+                        <label class="block text-sm font-medium text-gray-800 mb-1">Start Date</label>
                         <input type="date" name="start_date" value="{{ $filters['start_date'] }}"
-                            class="rounded-md border-gray-600 bg-[var(--color-primary-mid-dark)] text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            class="rounded-md border-gray-600 py-2 px-4 bg-[var(--color-primary-mid-dark)] text-gray-100 shadow-sm focus:border-[var(--color-primary-light)] focus:[var(--color-primary)]">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-100 mb-1">End Date</label>
+                        <label class="block text-sm font-medium text-gray-800 mb-1">End Date</label>
                         <input type="date" name="end_date" value="{{ $filters['end_date'] }}"
-                            class="rounded-md border-gray-600 bg-[var(--color-primary-mid-dark)] text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            class="rounded-md border-gray-600 py-2 px-4 bg-[var(--color-primary-mid-dark)] text-gray-100 shadow-sm focus:border-[var(--color-primary-light)] focus:[var(--color-primary)]">
                     </div>
 
                     @if($reportType->value === 'mR002')
                     <div>
-                        <label class="block text-sm font-medium text-gray-100 mb-1">Guardian Filter (optional)</label>
+                        <label class="block text-sm font-medium text-gray-800 mb-1">Guardian Filter (optional)</label>
                         <input type="text" name="guardian" value="{{ $filters['guardian'] }}" placeholder="Guardian name or code"
-                            class="rounded-md border-gray-600 bg-[var(--color-primary-mid-dark)] text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 w-64">
+                            class="rounded-md border-gray-600 py-2 px-4 bg-[var(--color-primary-mid-dark)] text-gray-100 shadow-sm focus:border-[var(--color-primary-light)] focus:[var(--color-primary)] w-64">
                     </div>
                     @endif
 
                     <button type="submit"
-                        class="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-[var(--color-accent-mid-dark)] transition-all">
+                        class="rounded-md bg-[var(--color-primary)] px-4 py-2 font-semibold text-white shadow-sm hover:opacity-75 transition-all">
                         Apply Filter
                     </button>
                 </form>
@@ -100,7 +100,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-700 bg-[var(--color-primary-dark)]">
                         @forelse($report['data'] as $row)
-                            <tr class="hover:bg-[var(--color-primary-mid-dark)] transition-colors">
+                            <tr class="bg-(--color-third-full-dark) hover:bg-[var(--color-primary-mid-dark)] transition-colors">
                                 @foreach($row as $key => $value)
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
                                         @if(is_iterable($value))
@@ -113,7 +113,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="100%" class="px-6 py-8 text-center text-sm text-gray-400">
+                                <td colspan="100%" class="px-6 py-8 text-center text-gray-100">
                                     No data found for the selected date range.
                                 </td>
                             </tr>
