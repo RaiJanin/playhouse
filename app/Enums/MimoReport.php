@@ -5,7 +5,7 @@ namespace App\Enums;
 enum MimoReport :string
 {
     case OUTLET_SALES = 'mR001';
-    case CASHIER = 'mR002';
+    case TRANSACTION = 'mR002';
     case HOUR_SALES = 'mR003';
     case ITEM_SALES = 'mR004';
 
@@ -13,7 +13,7 @@ enum MimoReport :string
     {
         return match ($this) {
             self::OUTLET_SALES => 'Outlet Sales Report',
-            self::CASHIER => "Cashier's Report",
+            self::TRANSACTION => "Transaction Report",
             self::HOUR_SALES => 'Sales Report by Hour',
             self::ITEM_SALES => 'Sales Report by Item',
         };

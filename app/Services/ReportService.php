@@ -19,7 +19,7 @@ class ReportService
 
         $result = match ($reportType) {
             MimoReport::OUTLET_SALES => $this->outletSalesReport($startDate, $endDate),
-            MimoReport::CASHIER      => $this->cashierReport($startDate, $endDate, $request),
+            MimoReport::TRANSACTION      => $this->transactionReport($startDate, $endDate, $request),
             MimoReport::HOUR_SALES   => $this->hourSalesReport($startDate, $endDate),
             MimoReport::ITEM_SALES   => $this->itemSalesReport($startDate, $endDate),
         };
@@ -52,7 +52,7 @@ class ReportService
 
         $result = match($reportType) {
             MimoReport::OUTLET_SALES => $this->outletSalesReport($startDate, $endDate),
-            MimoReport::CASHIER      => $this->cashierReport($startDate, $endDate, $request),
+            MimoReport::TRANSACTION      => $this->transactionReport($startDate, $endDate, $request),
             MimoReport::HOUR_SALES   => $this->hourSalesReport($startDate, $endDate),
             MimoReport::ITEM_SALES   => $this->itemSalesReport($startDate, $endDate),
         };
@@ -123,7 +123,7 @@ class ReportService
         return ['data' => $grouped, 'totals' => $this->buildTotals($items)];
     }
 
-    private function cashierReport(mixed $startDate, mixed $endDate, mixed $request): array
+    private function transactionReport(mixed $startDate, mixed $endDate, mixed $request): array
     {
         $items = $this->baseQuery($startDate, $endDate)
             ->with(['order.parentPl', 'child'])
