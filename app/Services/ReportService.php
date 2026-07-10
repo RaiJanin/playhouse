@@ -6,6 +6,8 @@ use App\Enums\MimoReport;
 use App\Models\OrderItems;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class ReportService
 {
@@ -22,8 +24,19 @@ class ReportService
             MimoReport::ITEM_SALES   => $this->itemSalesReport($startDate, $endDate),
         };
 
+        $perPage = (int) $request->query('per_page', 25);
+        $page    = (int) $request->query('page', 1);
+
+        $paginatedData = new LengthAwarePaginator(
+            $result['data']->forPage($page, $perPage)->values(),
+            $result['data']->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         return [
-            'data'    => $result['data'],
+            'data'    => $paginatedData,
             'totals'  => $result['totals'],
             'type'    => $reportType,
             'start'   => $startDate->format('Y-m-d'),
@@ -46,6 +59,7 @@ class ReportService
 
         return [
             'data'        => $result['data'],
+            'totals'      => $result['totals'],
             'report_type' => $reportType->label(),
             'start_date'  => $startDate->format('Y-m-d'),
             'end_date'    => $endDate->format('Y-m-d'),
@@ -133,7 +147,7 @@ class ReportService
                 ->pluck('child.firstname')
                 ->unique()
                 ->values()
-                ->implode(', ');
+                ->implode(' | ');
 
             return [
                 'guardian_code'       => $parent?->d_code ?? 'UNKNOWN',

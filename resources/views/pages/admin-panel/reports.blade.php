@@ -33,6 +33,18 @@
                     </div>
                     @endif
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-800 mb-1">Per Page</label>
+                        <select name="per_page" onchange="this.form.submit()"
+                                class="rounded-md border-gray-600 py-2 px-4 bg-[var(--color-primary-mid-dark)] text-gray-100 shadow-sm">
+                            @foreach([25, 50, 100] as $size)
+                                <option value="{{ $size }}" {{ $filters['per_page'] == $size ? 'selected' : '' }}>
+                                    {{ $size }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <button type="submit"
                         class="rounded-md bg-[var(--color-primary)] px-4 py-2 font-semibold text-white shadow-sm hover:opacity-75 transition-all">
                         Apply Filter
@@ -47,15 +59,15 @@
 
             <div class="mb-6 flex flex-wrap gap-3">
                 <a href="{{ route('reports.export', [$reportType->value, 'pdf', 'start_date' => $start_date, 'end_date' => $end_date]) }}"
-                   class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 transition-all">
+                   class="rounded-md bg-[var(--color-accent-mid-dark)] px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:opacity-75 transition-all">
                     <i class="fa-solid fa-file-pdf mr-2"></i>Export PDF
                 </a>
-                <a href="{{ route('reports.export', [$reportType->value, 'csv']) }}"
+                {{-- <a href="{{ route('reports.export', [$reportType->value, 'csv']) }}"
                    class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
                     <i class="fa-solid fa-file-csv mr-2"></i>Export CSV
-                </a>
+                </a> --}}
                 <a href="{{ route('dashboard') }}"
-                   class="rounded-md bg-[var(--color-accent-mid-dark)] px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-[var(--color-accent)] transition-all">
+                   class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-75 transition-all">
                     Close
                 </a>
             </div>
@@ -71,11 +83,11 @@
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Sales</div>
-                    <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_sales'], 2) }}</div>
+                    <div class="text-2xl font-bold text-white mt-1">₱{{ number_format($totals['total_sales'], 2) }}</div>
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Duration</div>
-                    <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_duration'], 2) }}</div>
+                    <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_duration'], 2) }} hours</div>
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Socks</div>
@@ -120,6 +132,9 @@
                         @endforelse
                     </tbody>
                 </table>
+                <div class="mt-6">
+                    {{ $report['data']->links() }}
+                </div>
             </div>
         </div>
     </div>

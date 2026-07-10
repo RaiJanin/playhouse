@@ -24,6 +24,7 @@ class ReportsController extends Controller
             'start_date' => $request->query('start_date', now()->format('Y-m-d')),
             'end_date'   => $request->query('end_date', now()->format('Y-m-d')),
             'guardian'   => $request->query('guardian', ''),
+            'per_page'    => $request->query('per_page', 25),
         ];
 
         return view($this->page, [
@@ -63,7 +64,7 @@ class ReportsController extends Controller
             . '_' . now()->format('Ymd')
             . '.pdf';
 
-        return $pdf->download($filename);
+        return $pdf->stream($filename);
     }
 
     private function exportCsv(array $report, MimoReport $reportType)
