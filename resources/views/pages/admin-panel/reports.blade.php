@@ -87,7 +87,7 @@
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Duration</div>
-                    <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_duration'], 2) }} hours</div>
+                    <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_duration'], 2) }} ₱/hour</div>
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Socks</div>
