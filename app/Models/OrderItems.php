@@ -17,6 +17,12 @@ class OrderItems extends Model
         'socksprice',
         'subtotal',
         'disc_code',
+        'disc_amnt',
+        'others_amnt',
+        'cash_tendered',
+        'change_amnt',
+        'is_paid',
+        'paid_at',
         'checked_out',
         'lne_xtra_chrg',
         'notified_timeout',
@@ -32,9 +38,21 @@ class OrderItems extends Model
 
     protected $casts = [
         'ckin' => 'datetime',
+        'ckout' => 'datetime',
         'bkout' => 'datetime',
         'bkin' => 'datetime',
-        'isfreeze' => 'boolean'
+        'isfreeze' => 'boolean',
+        'checked_out' => 'boolean',
+        'durationsubtotal' => 'decimal:2',
+        'socksprice' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'others_amnt' => 'decimal:2',
+        'disc_amnt' => 'decimal:2',
+        'lne_xtra_chrg' => 'decimal:2',
+        'cash_tendered' => 'decimal:2',
+        'change_amnt' => 'decimal:2',
+        'is_paid' => 'boolean',
+        'paid_at' => 'datetime',
     ];
 
     public function order()

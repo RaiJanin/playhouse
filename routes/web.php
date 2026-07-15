@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\PlayHouseController;
+use App\Http\Controllers\PaymentsController;
 
 //WEB routes for page viewing only
 
@@ -18,6 +19,8 @@ Route::get('/order-info/{order_no}', [PlayHouseController::class, 'orderInfo'])-
 Route::get('/checkout', [PlayHouseController::class, 'checkoutPage'])->name('playhouse.checkout');
 Route::get('/admin', [PlayHouseController::class, 'viewBookingsOnlyNamesTimes'])->middleware('auth')->name('playhouse.bookings');
 Route::get('/monitoring', function () { return view('pages.playhouse-monitoring'); })->middleware('auth')->name('playhouse.monitoring');
+Route::get('/payments', [PaymentsController::class, 'index'])->middleware('auth')->name('payments.index');
+Route::get('/payments/{ord_code_ph}', [PaymentsController::class, 'show'])->middleware('auth')->name('payments.show');
 
 
 require __DIR__.'/http-reqs.php';

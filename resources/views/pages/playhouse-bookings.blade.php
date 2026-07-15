@@ -53,6 +53,14 @@
     <a href="{{ route('playhouse.monitoring') }}" class="underline text-[var(--color-primary-mid-dark)] font-semibold p-1 hover:opacity-80">
        <i class="fa-solid fa-arrow-right-long mr-3"></i>Go to monitoring
     </a>
+    <a href="{{ route('payments.index') }}" class="underline text-[var(--color-primary-mid-dark)] font-semibold p-1 hover:opacity-80">
+       <i class="fa-solid fa-cash-register mr-3"></i>Go to payments
+    </a>
     @include('ui.bookings')
-    
+    @include('masterFiles')
+
+@endsection
+
+@section('scripts')
+    @vite('resources/js/modules/orderItemModal.js')
 @endsection

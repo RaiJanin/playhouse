@@ -179,6 +179,14 @@
                             {!!
                                 '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Booked</span>'
                             !!}
+                        @elseif ($item->status === 'done')
+                            {!!
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Ready to Pay</span>'
+                            !!}
+                        @elseif ($item->status === 'paid')
+                            {!!
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Paid</span>'
+                            !!}
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

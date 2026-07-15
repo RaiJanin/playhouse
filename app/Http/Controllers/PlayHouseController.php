@@ -15,6 +15,7 @@ use App\Models\ItemsPrices;
 use App\Services\DecodeBase64File;
 use App\Http\Resources\M06Resource;
 use App\Services\SendSmsService;
+use App\Enums\PromoCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -455,7 +456,7 @@ class PlayHouseController extends Controller
                 ]);
             }
 
-            if ($orderItem->checked_out)
+            if (!empty($orderItem->ckout))
             {
                 return response()->json([
                     'checked_out' => false,
@@ -488,6 +489,7 @@ class PlayHouseController extends Controller
             }
 
             $orderItem->checked_out = true;
+            $orderItem->ckout = $checkOut;
             $orderItem->save();
 
             // update parent order totals
@@ -517,8 +519,151 @@ class PlayHouseController extends Controller
         }
     }
 
+    public function getOrderItem($id)
+    {
+        $orderItem = OrderItems::with(['child', 'child.guardians', 'order.parentPl', 'durationhoursprices'])
+            ->findOrFail($id);
+
+        $guardian = $orderItem->child?->guardians->first();
+
+        return response()->json([
+            'orderItem' => [
+                'id' => $orderItem->id,
+                'ord_code_ph' => $orderItem->ord_code_ph,
+                'qr_child' => $orderItem->qr_child,
+                'qr_guardian' => $orderItem->qr_guardian,
+                'durations_id' => $orderItem->durations_id,
+                'durationhours' => $orderItem->durationhours,
+                'durationsubtotal' => $orderItem->durationsubtotal,
+                'socksqty' => $orderItem->socksqty,
+                'socksprice' => $orderItem->socksprice,
+                'others_amnt' => $orderItem->others_amnt,
+                'disc_code' => $orderItem->disc_code,
+                'disc_amnt' => $orderItem->disc_amnt,
+                'subtotal' => $orderItem->subtotal,
+                'ckin' => $orderItem->ckin,
+                'ckout' => $orderItem->ckout,
+                'bkin' => $orderItem->bkin,
+                'bkout' => $orderItem->bkout,
+                'isfreeze' => $orderItem->isfreeze,
+                'checked_out' => !empty($orderItem->ckout),
+            ],
+            'child' => $orderItem->child ? [
+                'd_code_c' => $orderItem->child->d_code_c,
+                'firstname' => $orderItem->child->firstname,
+                'lastname' => $orderItem->child->lastname,
+                'age' => $orderItem->child->age,
+            ] : null,
+            'guardian' => $guardian ? [
+                'd_code_g' => $guardian->d_code_g,
+                'd_name' => $guardian->d_name,
+                'mobileno' => $guardian->mobileno,
+                'age' => $guardian->age,
+                'guardianauthorized' => $guardian->guardianauthorized,
+            ] : null,
+            'durations' => DurationPrices::all(['id', 'duration_hour', 'label', 'price']),
+            'socksPrice' => (float) (ItemsPrices::where('item', 'socks_price')->value('price') ?? 0),
+            'promoCodes' => PromoCode::options(),
+        ]);
+    }
+
+    public function updateOrderItem(Request $request, $id)
+    {
+        $data = $request->validate([
+            'durations_id' => 'required|exists:duration_prices,id',
+            'socksqty' => 'required|integer|min:0',
+            'others_amnt' => 'nullable|numeric|min:0',
+            'disc_code' => 'nullable|string',
+            'out_for_break' => 'boolean',
+            'in_from_break' => 'boolean',
+            'child_age' => 'nullable|integer|min:0|max:20',
+            'guardian_name' => 'nullable|string|max:100',
+            'guardian_mobileno' => 'nullable|string|max:20',
+            'guardian_age' => 'nullable|integer|min:0|max:120',
+            'guardian_authorized' => 'boolean',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $orderItem = OrderItems::with('child')->findOrFail($id);
+
+            $duration = DurationPrices::findOrFail($data['durations_id']);
+            $socksUnitPrice = (float) (ItemsPrices::where('item', 'socks_price')->value('price') ?? 0);
+
+            $promo = PromoCode::tryFrom($data['disc_code'] ?? '') ?? PromoCode::NONE;
+
+            $orderItem->durations_id = $duration->id;
+            $orderItem->durationhours = $duration->duration_hour === 'unlimited' ? 5 : (int) $duration->duration_hour;
+            $orderItem->durationsubtotal = $duration->price;
+            $orderItem->socksqty = $data['socksqty'];
+            $orderItem->socksprice = $data['socksqty'] * $socksUnitPrice;
+            $orderItem->others_amnt = $data['others_amnt'] ?? 0;
+            $orderItem->disc_code = $promo->value ?: null;
+            $orderItem->disc_amnt = $promo->discount();
+            $orderItem->subtotal = $orderItem->durationsubtotal + $orderItem->socksprice
+                + $orderItem->others_amnt - $orderItem->disc_amnt;
+
+            if ($request->boolean('out_for_break') && !$orderItem->bkin) {
+                $orderItem->bkin = Carbon::now();
+                $orderItem->isfreeze = true;
+            }
+
+            if ($request->boolean('in_from_break') && $orderItem->bkin && !$orderItem->bkout) {
+                $orderItem->bkout = Carbon::now();
+                $orderItem->isfreeze = false;
+            }
+
+            $orderItem->save();
+
+            if ($orderItem->child) {
+                if ($request->filled('child_age')) {
+                    $orderItem->child->age = $data['child_age'];
+                    $orderItem->child->save();
+                }
+
+                if ($request->filled('guardian_name')) {
+                    $guardian = M06Guardian::updateOrCreate(
+                        ['d_code' => $orderItem->child->d_code, 'd_code_c' => $orderItem->child->d_code_c],
+                        [
+                            'd_name' => $data['guardian_name'],
+                            'firstname' => $data['guardian_name'],
+                            'mobileno' => $data['guardian_mobileno'] ?? null,
+                            'age' => $data['guardian_age'] ?? null,
+                            'isparent' => false,
+                            'isguardian' => true,
+                            'guardianauthorized' => $request->boolean('guardian_authorized'),
+                            'createdby' => auth()->user()->name ?? 'admin',
+                            'updatedby' => auth()->user()->name ?? 'admin',
+                        ]
+                    );
+
+                    $orderItem->guardian = $guardian->d_name;
+                    $orderItem->save();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'updated' => true,
+                'orderItem' => $orderItem->fresh(['child', 'child.guardians', 'durationhoursprices']),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'updated' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function viewBookingsOnlyNamesTimes(Request $request)
     {
+        $durations = DurationPrices::all();
+        $items = ItemsPrices::pluck('price', 'item');
+
         $request->merge([
             'start_date' => $request->input('start_date', now()->format('Y-m-d')),
             'end_date'   => $request->input('end_date', now()->format('Y-m-d')),
@@ -590,7 +735,7 @@ class PlayHouseController extends Controller
         );
 
         $orderItems = $query->select([
-                'id', 'd_code_child', 'ord_code_ph', 'ckin', 'ckout', 'durationhours', 'qr_child', 'qr_guardian'
+                'id', 'd_code_child', 'ord_code_ph', 'ckin', 'ckout', 'durationhours', 'qr_child', 'qr_guardian', 'is_paid'
             ])->with([
                 'child:d_code_c,firstname,lastname',
                 'order:ord_code_ph,d_code',
@@ -625,12 +770,21 @@ class PlayHouseController extends Controller
 
                     if($item->durationhours === 5)
                     {
-                        if(empty($item->ckin))
+                        if(!empty($item->ckout))
                         {
+                            $item->remainmins = "done";
+                            $item->status = $item->is_paid ? "paid" : "done";
+                        }
+                        else if(empty($item->ckin))
+                        {
+                            $item->remainmins = "0hr 0min";
                             $item->status = "booked";
                         }
-                        $item->remainmins = "unlimited";
-                        $item->status = "normal";
+                        else
+                        {
+                            $item->remainmins = "unlimited";
+                            $item->status = "normal";
+                        }
                     }
                     else if(!empty($item->ckin) && empty($item->ckout))
                     {
@@ -648,7 +802,7 @@ class PlayHouseController extends Controller
                     else if(!empty($item->ckin) && !empty($item->ckout))
                     {
                         $item->remainmins = 'done';
-                        $item->status = "done";
+                        $item->status = $item->is_paid ? "paid" : "done";
                     }
                     else if(empty($item->ckin))
                     {
@@ -674,7 +828,7 @@ class PlayHouseController extends Controller
                     return $item;
                 })->withQueryString();
 
-        return view('pages.playhouse-bookings', compact('orderItems', 'statusMonitor'));
+        return view('pages.playhouse-bookings', compact('orderItems', 'statusMonitor', 'durations', 'items'));
     }
 
 
