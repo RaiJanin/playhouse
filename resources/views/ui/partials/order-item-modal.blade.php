@@ -12,12 +12,14 @@
             <!-- QR Row -->
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Child QR Code</label>
-                    <div id="order-modal-qr-child" class="rounded-md py-2 px-3 bg-yellow-100 border border-yellow-300 text-gray-800 font-medium">N/A</div>
+                    <label for="order-modal-qr-child" class="block text-sm font-semibold text-gray-700 mb-1">Child QR Code</label>
+                    <input type="text" id="order-modal-qr-child" placeholder="N/A"
+                        class="w-full rounded-md py-2 px-3 bg-yellow-100 border border-yellow-300 text-gray-800 font-medium shadow-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Guardian QR Code</label>
-                    <div id="order-modal-qr-guardian" class="rounded-md py-2 px-3 bg-orange-200 border border-orange-400 text-gray-800 font-medium">N/A</div>
+                    <label for="order-modal-qr-guardian" class="block text-sm font-semibold text-gray-700 mb-1">Guardian QR Code</label>
+                    <input type="text" id="order-modal-qr-guardian" placeholder="N/A"
+                        class="w-full rounded-md py-2 px-3 bg-orange-200 border border-orange-400 text-gray-800 font-medium shadow-sm">
                 </div>
             </div>
 

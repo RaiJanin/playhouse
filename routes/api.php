@@ -21,12 +21,18 @@ Route::patch('/verify-otp/{phoneNum}', [PlayHouseController::class, 'verifyOTP']
 Route::delete('/delete-otp/{otpId}', [PlayHouseController::class, 'deleteOtp']);
 Route::get('/search-returnee/{phoneNumber}', [PlayHouseController::class, 'searchReturnee'])->name('returnee.search');
 Route::get('/get-orders', [PlayHouseController::class, 'getOrders']);
-Route::get('/order-items/{id}', [PlayHouseController::class, 'getOrderItem']);
-Route::patch('/order-items/{id}', [PlayHouseController::class, 'updateOrderItem']);
-Route::patch('/check-out/{orderNum}', [PlayHouseController::class, 'checkOut']);
-Route::get('/order-items/{id}/payment-details', [PaymentsController::class, 'details']);
-Route::patch('/order-items/{id}/pay', [PaymentsController::class, 'pay']);
-Route::patch('/order-items/{id}/cancel-checkout', [PaymentsController::class, 'cancelCheckout']);
+
+// Staff-only actions — these back the /admin and /payments pages, which already require a logged-in session.
+// 'web' is required here (not just 'auth') because api.php doesn't get the session/CSRF middleware by default.
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/order-items/{id}', [PlayHouseController::class, 'getOrderItem']);
+    Route::get('/order-items/{id}/payment-details', [PaymentsController::class, 'details']);
+    Route::patch('/order-items/{id}', [PlayHouseController::class, 'updateOrderItem']);
+    Route::patch('/check-out/{orderNum}', [PlayHouseController::class, 'checkOut']);
+    Route::patch('/order-items/{id}/pay', [PaymentsController::class, 'pay']);
+    Route::patch('/order-items/{id}/cancel-checkout', [PaymentsController::class, 'cancelCheckout']);
+    Route::get('/get-inhouse', [MimoAdminController::class, 'monitoring']);
+});
+
 Route::post('/turnstile-srch', [TurnstileController::class, 'turnstileSrchPOST']);
 Route::get('/get-contact', [InformationsController::class, 'getContact']);
-Route::get('/get-inhouse', [MimoAdminController::class, 'monitoring']);

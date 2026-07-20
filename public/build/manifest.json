@@ -18,12 +18,16 @@
     "file": "assets/global-DmBG2915.js",
     "name": "global"
   },
+  "_sweetalert2.esm.all-zQoXDmfS.js": {
+    "file": "assets/sweetalert2.esm.all-zQoXDmfS.js",
+    "name": "sweetalert2.esm.all"
+  },
   "_tablePlaceholders-BXMg6PZl.js": {
     "file": "assets/tablePlaceholders-BXMg6PZl.js",
     "name": "tablePlaceholders"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DYnIJi0Y.css",
+    "file": "assets/app-pBXeBLS7.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "names": [
@@ -31,33 +35,37 @@
     ]
   },
   "resources/js/admin-app.js": {
-    "file": "assets/admin-app-BDuU4Wj8.js",
+    "file": "assets/admin-app-DfhP10nO.js",
     "name": "admin-app",
     "src": "resources/js/admin-app.js",
     "isEntry": true,
     "imports": [
-      "resources/js/dependencies.js",
+      "_sweetalert2.esm.all-zQoXDmfS.js",
       "_bootstrap-BLJHPDVc.js"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DgdUB7Cc.js",
+    "file": "assets/app-CEPc9rQw.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "_bootstrap-BLJHPDVc.js",
-      "resources/js/dependencies.js",
+      "resources/js/admin-app.js",
       "_alertBlade-BUM9xmiZ.js",
       "_dateString-BeYmJdwN.js",
-      "_global-DmBG2915.js"
+      "_global-DmBG2915.js",
+      "_sweetalert2.esm.all-zQoXDmfS.js"
     ]
   },
   "resources/js/dependencies.js": {
-    "file": "assets/dependencies-DJqsk2-T.js",
+    "file": "assets/dependencies-CFSLWEvk.js",
     "name": "dependencies",
     "src": "resources/js/dependencies.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-zQoXDmfS.js"
+    ]
   },
   "resources/js/modules/admin-panel-create.js": {
     "file": "assets/admin-panel-create-CvqyKYiW.js",
@@ -66,7 +74,7 @@
     "isEntry": true
   },
   "resources/js/modules/orderItemModal.js": {
-    "file": "assets/orderItemModal-C43uzeKY.js",
+    "file": "assets/orderItemModal-zZEm97jm.js",
     "name": "orderItemModal",
     "src": "resources/js/modules/orderItemModal.js",
     "isEntry": true,
@@ -76,7 +84,7 @@
     ]
   },
   "resources/js/modules/paymentModal.js": {
-    "file": "assets/paymentModal-C7FxtcNq.js",
+    "file": "assets/paymentModal-CFcfRQYu.js",
     "name": "paymentModal",
     "src": "resources/js/modules/paymentModal.js",
     "isEntry": true,

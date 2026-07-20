@@ -185,6 +185,9 @@ function populateForm(data) {
     childNameEl.textContent = `${child.firstname || ''} ${child.lastname || ''}`.trim();
     childAgeInput.value = child.age ?? '';
 
+    qrChildEl.value = orderItem.qr_child || '';
+    qrGuardianEl.value = orderItem.qr_guardian || '';
+
     populateDurationsSelect();
     populatePromoSelect();
 
@@ -210,6 +213,8 @@ function populateForm(data) {
 
 function buildPayload() {
     return {
+        qr_child: qrChildEl.value.trim() || null,
+        qr_guardian: qrGuardianEl.value.trim() || null,
         durations_id: Number(durationSelect.value),
         socksqty: Number(socksQtyInput.value || 0),
         others_amnt: Number(othersInput.value || 0),
@@ -227,8 +232,8 @@ function buildPayload() {
 async function open(detail) {
     currentId = detail.id;
 
-    qrChildEl.textContent = detail.qrChild || 'N/A';
-    qrGuardianEl.textContent = detail.qrGuardian || 'N/A';
+    qrChildEl.value = detail.qrChild || '';
+    qrGuardianEl.value = detail.qrGuardian || '';
     bookingNumberEl.textContent = detail.bookId || '';
 
     loadingEl.classList.remove('hidden');

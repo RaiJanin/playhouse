@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePlayhouseFormRequest;
+use App\Http\Requests\UpdateOrderItemRequest;
+use App\Http\Requests\CheckOutOrderItemRequest;
 use App\Models\PhoneNumber;
 use App\Models\M06;
 use App\Models\M06Guardian;
@@ -436,7 +438,7 @@ class PlayHouseController extends Controller
         ]);
     }
 
-    public function checkOut($orderItemId)
+    public function checkOut(CheckOutOrderItemRequest $request, $orderItemId)
     {
         try
         {
@@ -567,21 +569,9 @@ class PlayHouseController extends Controller
         ]);
     }
 
-    public function updateOrderItem(Request $request, $id)
+    public function updateOrderItem(UpdateOrderItemRequest $request, $id)
     {
-        $data = $request->validate([
-            'durations_id' => 'required|exists:duration_prices,id',
-            'socksqty' => 'required|integer|min:0',
-            'others_amnt' => 'nullable|numeric|min:0',
-            'disc_code' => 'nullable|string',
-            'out_for_break' => 'boolean',
-            'in_from_break' => 'boolean',
-            'child_age' => 'nullable|integer|min:0|max:20',
-            'guardian_name' => 'nullable|string|max:100',
-            'guardian_mobileno' => 'nullable|string|max:20',
-            'guardian_age' => 'nullable|integer|min:0|max:120',
-            'guardian_authorized' => 'boolean',
-        ]);
+        $data = $request->validated();
 
         try {
             DB::beginTransaction();
@@ -593,6 +583,8 @@ class PlayHouseController extends Controller
 
             $promo = PromoCode::tryFrom($data['disc_code'] ?? '') ?? PromoCode::NONE;
 
+            $orderItem->qr_child = $data['qr_child'] ?? null;
+            $orderItem->qr_guardian = $data['qr_guardian'] ?? null;
             $orderItem->durations_id = $duration->id;
             $orderItem->durationhours = $duration->duration_hour === 'unlimited' ? 5 : (int) $duration->duration_hour;
             $orderItem->durationsubtotal = $duration->price;

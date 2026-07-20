@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PayOrderItemRequest;
+use App\Http\Requests\CancelCheckoutRequest;
 use App\Models\OrderItems;
 use App\Models\Orders;
 use App\Models\ItemsPrices;
@@ -104,11 +106,9 @@ class PaymentsController extends Controller
         ]);
     }
 
-    public function pay(Request $request, $id)
+    public function pay(PayOrderItemRequest $request, $id)
     {
-        $data = $request->validate([
-            'cash_tendered' => 'required|numeric|min:0',
-        ]);
+        $data = $request->validated();
 
         $orderItem = OrderItems::findOrFail($id);
 
@@ -142,7 +142,7 @@ class PaymentsController extends Controller
         ]);
     }
 
-    public function cancelCheckout($id)
+    public function cancelCheckout(CancelCheckoutRequest $request, $id)
     {
         try {
             DB::beginTransaction();
