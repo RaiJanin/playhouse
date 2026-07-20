@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(php -v)",
+      "Bash(npm -v)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:8000/ --max-time 3)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:5173/ --max-time 3)",
+      "Bash(curl -s http://127.0.0.1:8000/payments -w \"\\\\nHTTP_CODE:%{http_code}\\\\n\" --max-time 5)",
+      "Bash(PGPASSWORD=Rightech777 /c/laragon/bin/postgresql/*/bin/psql -h localhost -U postgres -d live_mimo -c \"select id, username, email from rssys.users limit 5;\")",
+      "Bash(chromium-cli --help)",
+      "Bash(npm ls *)",
+      "Bash(node -e \"console.log\\(require.resolve\\('playwright'\\)\\)\")",
+      "Bash(timeout 25 npx --yes playwright --version)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s http://127.0.0.1:8000/admin-panel/login -w \"\\\\nHTTP:%{http_code}\\\\n\" --max-time 5)",
+      "Bash(mkdir -p screenshots)",
+      "Bash(node test.js)"
+    ]
+  }
+}

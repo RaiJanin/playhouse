@@ -8,7 +8,7 @@
             </button>
         </div>
 
-        <div class="p-6 bg-white">
+        <div class="p-6 bg-[var(--color-primary-transparent)]">
             <div class="flex items-start justify-between mb-4">
                 <div>
                     <h3 id="payment-modal-child-name" class="text-2xl font-bold text-gray-900"></h3>
@@ -51,7 +51,7 @@
                 <div id="payment-modal-unpaid-section" class="space-y-2 mt-4">
                     <label class="block text-base font-bold text-gray-800">Cash Tendered (₱)</label>
                     <input type="number" min="0" step="0.01" id="payment-modal-cash-input"
-                        class="w-full rounded-md border-gray-300 py-3 px-3 shadow-sm text-2xl font-semibold">
+                        class="bg-white w-full rounded-xl border-gray-300 py-3 px-3 shadow-sm text-2xl font-semibold">
 
                     <div class="flex justify-between text-lg font-bold text-gray-800">
                         <span>Change</span>
@@ -78,7 +78,7 @@
                 <i class="fa-solid fa-rotate-left mr-1"></i> Cancel
             </button>
             <button type="button" id="payment-modal-pay-btn"
-                class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
+                class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
                 <i class="fa-solid fa-money-bill-wave mr-1"></i> Pay
             </button>
         </div>

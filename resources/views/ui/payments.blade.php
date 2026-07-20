@@ -1,5 +1,5 @@
 <div class="p-4">
-    <div class="mb-6 rounded-2xl p-6 bg-[var(--color-primary-full-dark)]">
+    <div class="mb-6 max-w-2xl rounded-2xl p-6 bg-[var(--color-primary-full-dark)]">
         <label for="booking-lookup" class="block text-sm font-semibold text-gray-100 mb-2">
             Scan or type Booking Number, then press Enter
         </label>
@@ -8,7 +8,7 @@
             id="booking-lookup"
             autofocus
             placeholder="e.g. 26G0448"
-            class="w-full text-2xl sm:text-3xl font-bold tracking-wider text-center py-4 px-4 rounded-xl border-0 shadow-inner focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)]"
+            class="mx-auto block w-72 sm:w-96 bg-[var(--color-light-mode)] text-gray-900 placeholder:text-gray-400 placeholder:font-normal text-2xl sm:text-3xl font-bold tracking-wider text-center py-4 px-4 rounded-xl border-0 shadow-inner focus:outline-none focus:ring-4 focus:ring-[var(--color-accent)]"
         >
     </div>
 
@@ -46,12 +46,11 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent / Guardian</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking Number</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Due</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($orderItems as $item)
-                    <tr>
+                    <tr class="order-row hover:bg-gray-100" data-id="{{ $item->id }}">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $item->child ? $item->child->firstname . ' ' . $item->child->lastname : 'N/A' }}
                         </td>
@@ -60,16 +59,10 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->ord_code_ph }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₱{{ number_format($item->amount_due, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <button type="button" class="open-payment-btn px-3 py-1.5 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all"
-                                data-id="{{ $item->id }}">
-                                Pay
-                            </button>
-                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        <td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                             No children are ready to pay right now.
                         </td>
                     </tr>

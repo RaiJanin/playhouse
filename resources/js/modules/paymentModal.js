@@ -125,6 +125,7 @@ async function open(detail) {
 
     try {
         const data = await getOrDelete('GET', API_ROUTES.orderItemURL, `${detail.id}/payment-details`);
+        console.log('Payment modal data: '+data)
         populate(data);
         loadingEl.classList.add('hidden');
         bodyEl.classList.remove('hidden');
@@ -185,6 +186,10 @@ function init() {
     document.querySelectorAll('.open-payment-btn').forEach(btn => {
         btn.addEventListener('click', () => open({ id: btn.dataset.id }));
     });
+
+    document.querySelectorAll('.order-row').forEach(row => {
+        row.addEventListener('click', () => open({ id: row.dataset.id }))
+    })
 
     closeBtn.addEventListener('click', closeModal);
     cashInput.addEventListener('input', recomputeChange);

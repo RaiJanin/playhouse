@@ -44,12 +44,12 @@
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-semibold text-gray-700 w-28">Child Age</label>
                         <input type="number" min="0" id="order-modal-child-age"
-                            class="flex-1 rounded-md border-gray-300 py-1.5 px-2 shadow-sm">
+                            class="flex-1 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm">
                     </div>
 
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-semibold text-gray-700 w-28">Playtime Duration</label>
-                        <select id="order-modal-duration" class="flex-1 rounded-md border-gray-300 py-1.5 px-2 shadow-sm"></select>
+                        <select id="order-modal-duration" class="flex-1 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm"></select>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -73,16 +73,16 @@
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-semibold text-gray-700 w-28">Guardian Name</label>
                         <input type="text" id="order-modal-guardian-name"
-                            class="flex-1 rounded-md border-gray-300 py-1.5 px-2 shadow-sm">
+                            class="flex-1 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm">
                     </div>
 
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-semibold text-gray-700 w-28">Guardian Mobile#</label>
                         <input type="text" id="order-modal-guardian-mobile"
-                            class="flex-1 rounded-md border-gray-300 py-1.5 px-2 shadow-sm">
+                            class="flex-1 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm">
                         <label class="text-sm font-semibold text-gray-700">Age</label>
                         <input type="number" min="0" id="order-modal-guardian-age"
-                            class="w-16 rounded-md border-gray-300 py-1.5 px-2 shadow-sm">
+                            class="w-16 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm">
                     </div>
 
                     <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -92,7 +92,7 @@
 
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-semibold text-gray-700 w-28">Promo Code</label>
-                        <select id="order-modal-promo" class="flex-1 rounded-md border-gray-300 py-1.5 px-2 shadow-sm"></select>
+                        <select id="order-modal-promo" class="flex-1 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm"></select>
                     </div>
 
                     <div class="flex items-center justify-between pt-2 mt-2 border-t border-gray-300 text-sm text-gray-500">
@@ -108,7 +108,7 @@
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-semibold text-gray-700 flex-1">Socks Qty</label>
                         <input type="number" min="0" id="order-modal-socks-qty"
-                            class="w-28 rounded-md border-gray-300 py-1.5 px-2 shadow-sm text-right">
+                            class="w-28 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm text-right">
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -129,7 +129,7 @@
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-semibold text-gray-700 flex-1">Others (₱)</label>
                         <input type="number" min="0" step="0.01" id="order-modal-others"
-                            class="w-28 rounded-md border-gray-300 py-1.5 px-2 shadow-sm text-right">
+                            class="w-28 rounded-md border-gray-300 bg-[var(--color-light-mode)] text-gray-900 py-1.5 px-2 shadow-sm text-right">
                     </div>
 
                     <div class="border-t border-dashed border-gray-300 my-2"></div>
@@ -155,7 +155,7 @@
         <!-- Buttons -->
         <div class="flex justify-end gap-2 py-3 px-6 bg-[var(--color-primary-transparent)]">
             <button type="button" id="order-modal-save-btn"
-                class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
+                class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> Save
             </button>
             <button type="button" id="order-modal-checkout-btn"

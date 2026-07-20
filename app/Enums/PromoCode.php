@@ -9,15 +9,13 @@ namespace App\Enums;
 enum PromoCode: string
 {
     case NONE = '';
-    case WELCOME50 = 'WELCOME50';
-    case LOYALTY100 = 'LOYALTY100';
+    case PWDDISC = 'PWD DISCOUNT';
 
     public function label(): string
     {
         return match ($this) {
             self::NONE => 'No Promo',
-            self::WELCOME50 => 'Welcome Promo (₱50 off)',
-            self::LOYALTY100 => 'Loyalty Promo (₱100 off)',
+            self::PWDDISC => 'PWD DISCOUNT',
         };
     }
 
@@ -25,8 +23,7 @@ enum PromoCode: string
     {
         return match ($this) {
             self::NONE => 0,
-            self::WELCOME50 => 50,
-            self::LOYALTY100 => 100,
+            self::PWDDISC => 76,
         };
     }
 

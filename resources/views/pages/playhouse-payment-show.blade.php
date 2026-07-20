@@ -63,7 +63,7 @@
                 </div>
 
                 @if($item->status === 'done' || $item->status === 'paid')
-                    <button type="button" class="open-payment-btn w-full px-4 py-2 {{ $item->status === 'paid' ? 'bg-gray-200 text-gray-700' : 'bg-green-600 text-white' }} font-semibold rounded-lg hover:opacity-80 transition-all"
+                    <button type="button" class="open-payment-btn w-full px-4 py-2 {{ $item->status === 'paid' ? 'bg-gray-200 text-gray-700' : 'bg-[var(--color-primary)] text-white' }} font-semibold rounded-lg hover:opacity-80 transition-all"
                         data-id="{{ $item->id }}">
                         {{ $item->status === 'paid' ? 'View Payment' : 'Pay' }}
                     </button>
