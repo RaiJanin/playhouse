@@ -20,10 +20,16 @@ class Orders extends Model
         'disc_amnt',
         'fb_pp_url',
         'visitdate',
+        'paid_amnt',
+        'is_paid',
+        'paid_at',
     ];
 
     protected $casts = [
-        'visitdate' => 'date'
+        'visitdate' => 'date',
+        'paid_amnt' => 'decimal:2',
+        'is_paid' => 'boolean',
+        'paid_at' => 'datetime',
     ];
 
     public function parentPl()
@@ -34,6 +40,11 @@ class Orders extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItems::class, 'ord_code_ph', 'ord_code_ph');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(OrderPayment::class, 'ord_code_ph', 'ord_code_ph');
     }
     
     protected static function boot()

@@ -17,7 +17,7 @@ let closeBtn, qrChildEl, qrGuardianEl, countdownEl, countdownLabelEl, readyBadge
     guardianMobileInput, guardianAgeInput, guardianAuthorizedInput, promoSelect,
     idNumberEl, bookingNumberEl, socksQtyInput, hoursEl, playtimeAmountEl,
     socksAmountEl, othersInput, subtotalEl, discountEl, lineTotalEl,
-    saveBtn, checkoutBtn, checkoutLabelEl;
+    saveBtn, checkoutBtn, checkoutLabelEl, payBtn;
 
 /**
  * Formats remaining play time as HH:MM:SS, clamped at 00:00:00.
@@ -82,6 +82,7 @@ function onMount() {
     saveBtn = document.getElementById('order-modal-save-btn');
     checkoutBtn = document.getElementById('order-modal-checkout-btn');
     checkoutLabelEl = document.getElementById('order-modal-checkout-label');
+    payBtn = document.getElementById('order-modal-pay-btn');
 }
 
 function showModal() {
@@ -170,6 +171,7 @@ function applyCheckedOutState() {
     const isCheckedOut = !!orderItem.checked_out;
     checkoutBtn.disabled = isCheckedOut;
     checkoutLabelEl.textContent = isCheckedOut ? 'Already Checked Out' : 'Check Out';
+    payBtn.disabled = !isCheckedOut;
 }
 
 function populateForm(data) {
@@ -296,6 +298,13 @@ async function checkOut() {
     }
 }
 
+function openPaymentModal() {
+    if (!currentId || !orderItem.checked_out) return;
+    const id = currentId;
+    closeModal();
+    window.dispatchEvent(new CustomEvent('open-payment-modal', { detail: { id } }));
+}
+
 function init() {
     onMount();
     if (!closeBtn) return; // modal partial not on this page
@@ -310,6 +319,7 @@ function init() {
 
     saveBtn.addEventListener('click', save);
     checkoutBtn.addEventListener('click', checkOut);
+    payBtn.addEventListener('click', openPaymentModal);
 }
 
 document.addEventListener('DOMContentLoaded', init);

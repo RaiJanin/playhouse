@@ -51,6 +51,9 @@
         .numbers th {
             background: #f4f4f5;
         }
+        table.data-table tr {
+            page-break-inside: avoid;
+        }
     </style>
 </head>
 <body>
@@ -71,22 +74,26 @@
         Generated: {{ $report['generated_at'] }}
     </div>
 
-    <table>
+    <table class="data-table">
         <thead>
             <tr>
-                @foreach(array_keys((array) $report['data']->first()) as $header)
+                @foreach(array_keys((array) ($report['data']->first() ?? [])) as $header)
                     <th>{{ str_replace('_', ' ', ucfirst($header)) }}</th>
                 @endforeach
             </tr>
         </thead>
         <tbody>
-            @foreach($report['data'] as $row)
+            @forelse($report['data'] as $row)
                 <tr>
                     @foreach($row as $value)
                         <td>{{ is_iterable($value) ? collect($value)->implode(' | ') : $value }}</td>
                     @endforeach
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="{{ count($report['data']->first() ?? []) }}">No data found for the selected period.</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
     <br><br><br>

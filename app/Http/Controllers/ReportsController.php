@@ -14,7 +14,7 @@ class ReportsController extends Controller
     {
         $reportType = MimoReport::tryFrom($mimo_report);
 
-        if (!$reportType) {
+        if (! $reportType) {
             abort(404, 'Invalid report type');
         }
 
@@ -22,36 +22,49 @@ class ReportsController extends Controller
 
         $filters = [
             'start_date' => $request->query('start_date', now()->format('Y-m-d')),
-            'end_date'   => $request->query('end_date', now()->format('Y-m-d')),
-            'guardian'   => $request->query('guardian', ''),
-            'per_page'    => $request->query('per_page', 25),
+            'end_date' => $request->query('end_date', now()->format('Y-m-d')),
+            'guardian' => $request->query('guardian', ''),
+            'per_page' => $request->query('per_page', 25),
         ];
 
         return view($this->page, [
-            'report'     => $report,
+            'report' => $report,
             'reportType' => $reportType,
-            'filters'    => $filters,
+            'filters' => $filters,
         ]);
     }
 
     public function export(Request $request, ReportService $reportService, string $mimo_report, string $format)
     {
-        $reportType = MimoReport::tryFrom($mimo_report);
-        if (!$reportType) {
-            abort(404, 'Invalid report type');
+        try {
+            $reportType = MimoReport::tryFrom($mimo_report);
+            if (! $reportType) {
+                abort(404, 'Invalid report type');
+            }
+
+            if ($format === 'pdf') {
+                ini_set('memory_limit', '5G');
+                set_time_limit(300);
+            }
+
+            $report = $reportService->generateReport($request, $mimo_report);
+
+            if ($format === 'pdf') {
+                return $this->exportPdf($report, $reportType);
+            }
+
+            if ($format === 'csv') {
+                return $this->exportCsv($report, $reportType);
+            }
+
+            abort(415, 'Unsupported export format. Use pdf or csv.');
+        } catch (\Exception $e) {
+            return response([
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
-        $report = $reportService->generateReport($request, $mimo_report);
-
-        if ($format === 'pdf') {
-            return $this->exportPdf($report, $reportType);
-        }
-
-        if ($format === 'csv') {
-            return $this->exportCsv($report, $reportType);
-        }
-
-        abort(415, 'Unsupported export format. Use pdf or csv.');
     }
 
     private function exportPdf(array $report, MimoReport $reportType)
@@ -61,8 +74,8 @@ class ReportsController extends Controller
         $pdf->loadHTML($html->render());
 
         $filename = strtolower(str_replace(' ', '_', $reportType->label()))
-            . '_' . now()->format('Ymd')
-            . '.pdf';
+            .'_'.now()->format('Ymd')
+            .'.pdf';
 
         return $pdf->stream($filename);
     }
@@ -70,11 +83,11 @@ class ReportsController extends Controller
     private function exportCsv(array $report, MimoReport $reportType)
     {
         $filename = strtolower(str_replace([' ', '&', '/'], ['_', 'and', '_'], $reportType->label()))
-            . '_' . now()->format('Ymd')
-            . '.csv';
+            .'_'.now()->format('Ymd')
+            .'.csv';
 
         $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename={$filename}",
         ];
 
@@ -82,13 +95,13 @@ class ReportsController extends Controller
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            fputcsv($handle, ['Report: ' . $report['report_type']]);
-            fputcsv($handle, ['Date Range: ' . $report['start_date'] . ' to ' . $report['end_date']]);
-            fputcsv($handle, ['Generated: ' . $report['generated_at']]);
+            fputcsv($handle, ['Report: '.$report['report_type']]);
+            fputcsv($handle, ['Date Range: '.$report['start_date'].' to '.$report['end_date']]);
+            fputcsv($handle, ['Generated: '.$report['generated_at']]);
             fputcsv($handle, []);
 
             $data = $report['data'];
-            if (!empty($data)) {
+            if (! empty($data)) {
                 $headers = array_keys((array) $data[0]);
                 fputcsv($handle, $headers);
                 foreach ($data as $row) {

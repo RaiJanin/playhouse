@@ -8,5 +8,7 @@ export const API_ROUTES = {
     getOrdersURL: '/api/get-orders',
     checkOutURL: '/api/check-out',
     getMarketURL: '/api/get-markets',
-    orderItemURL: '/api/order-items'
+    orderItemURL: '/api/order-items',
+    chargeAccountsURL: '/api/charge-accounts',
+    paymentModesURL: '/api/payment-modes'
 };

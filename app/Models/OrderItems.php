@@ -70,4 +70,9 @@ class OrderItems extends Model
         return $this->belongsTo(DurationPrices::class, 'durations_id', 'id');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(OrderPayment::class, 'ordlne_ph_id');
+    }
+
 }

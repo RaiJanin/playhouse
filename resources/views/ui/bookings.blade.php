@@ -45,7 +45,7 @@
             >
         </div>
         <div class="flex flex-col">
-            <label for="search" class="block text-sm font-semibold text-gray-700 mb-1">Search Item/s</label>
+            <label for="search" class="block text-sm font-semibold text-gray-700 mb-1">Search Booking/s</label>
             <div class="relative group">
                 <input 
                     type="text" 
@@ -55,7 +55,7 @@
                     value="{{ request('search') }}"
                 >
                 <div class="absolute left-0 -top-12 hidden group-hover:block bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap z-10">
-                    Search by child's name or QR codes
+                    Search by booking number, child's name, or QR codes
                 </div>
             </div>
         </div>

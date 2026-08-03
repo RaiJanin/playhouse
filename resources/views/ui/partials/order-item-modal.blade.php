@@ -165,6 +165,11 @@
                 <i class="fa-solid fa-right-from-bracket mr-1"></i>
                 <span id="order-modal-checkout-label">Check Out</span>
             </button>
+            <button type="button" id="order-modal-pay-btn" disabled
+                class="px-4 py-2 bg-[var(--color-third-full-dark)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
+                <i class="fa-solid fa-money-bill-wave mr-1"></i>
+                <span id="order-modal-pay-label">Enter Payment</span>
+            </button>
         </div>
     </div>
 </x-breeze-modal>

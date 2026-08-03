@@ -27,9 +27,12 @@ Route::get('/get-orders', [PlayHouseController::class, 'getOrders']);
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/order-items/{id}', [PlayHouseController::class, 'getOrderItem']);
     Route::get('/order-items/{id}/payment-details', [PaymentsController::class, 'details']);
+    Route::get('/charge-accounts', [PaymentsController::class, 'chargeAccounts']);
+    Route::get('/payment-modes', [PaymentsController::class, 'paymentModes']);
     Route::patch('/order-items/{id}', [PlayHouseController::class, 'updateOrderItem']);
     Route::patch('/check-out/{orderNum}', [PlayHouseController::class, 'checkOut']);
     Route::patch('/order-items/{id}/pay', [PaymentsController::class, 'pay']);
+    Route::delete('/order-items/{id}/payments/{paymentId}', [PaymentsController::class, 'removePayment']);
     Route::patch('/order-items/{id}/cancel-checkout', [PaymentsController::class, 'cancelCheckout']);
     Route::get('/get-inhouse', [MimoAdminController::class, 'monitoring']);
 });

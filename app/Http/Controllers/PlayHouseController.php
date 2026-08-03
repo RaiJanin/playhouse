@@ -703,6 +703,21 @@ class PlayHouseController extends Controller
             'total_guardians' => $totalGuardians
         ];
 
+        $searchedOrder = null;
+
+        if ($request->filled('search')) {
+            $searchedOrder = Orders::whereRaw('UPPER(ord_code_ph) = UPPER(?)', [trim($request->search)])
+                ->with(['parentPl', 'orderItems.child'])
+                ->first();
+
+            if ($searchedOrder) {
+                $searchedOrder->balance = round((float) $searchedOrder->total_amnt - (float) $searchedOrder->paid_amnt, 2);
+                $searchedOrder->orderItems->each(function ($item) {
+                    $item->amount_due = round((float) $item->subtotal + (float) $item->lne_xtra_chrg, 2);
+                });
+            }
+        }
+
         $status = $request->get('status');
 
         switch($status)
@@ -718,7 +733,7 @@ class PlayHouseController extends Controller
                 break;
         }
 
-        $query->when($request->filled(['start_date', 'end_date']),
+        $query->when(!$request->filled('search') && $request->filled(['start_date', 'end_date']),
             function ($q) use ($startDate, $endDate)
             {
                 $q->whereDate('created_at', '>=', $startDate . ' 00:00:00')
@@ -736,6 +751,7 @@ class PlayHouseController extends Controller
                 function ($search) use ($request) {
                     $search->where('qr_child', 'like', '%' . $request->search . '%')
                         ->orWhere('qr_guardian', 'like', '%' . $request->search . '%')
+                        ->orWhere('ord_code_ph', 'like', '%' . $request->search . '%')
                         ->orWhereHas('child',
                             function ($childSearch) use ($request) {
                                 $childSearch->where('firstname', 'like', '%' . $request->search . '%');
@@ -820,7 +836,7 @@ class PlayHouseController extends Controller
                     return $item;
                 })->withQueryString();
 
-        return view('pages.playhouse-bookings', compact('orderItems', 'statusMonitor', 'durations', 'items'));
+        return view('pages.playhouse-bookings', compact('orderItems', 'statusMonitor', 'durations', 'items', 'searchedOrder'));
     }
 
 
