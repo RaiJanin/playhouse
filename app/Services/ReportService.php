@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Enums\MimoReport;
+use App\Models\OfficialReceipt;
 use App\Models\OrderItems;
+use App\Models\PaymentMode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -22,6 +24,7 @@ class ReportService
             MimoReport::TRANSACTION => $this->transactionReport($startDate, $endDate, $request),
             MimoReport::HOUR_SALES => $this->hourSalesReport($startDate, $endDate),
             MimoReport::ITEM_SALES => $this->itemSalesReport($startDate, $endDate),
+            MimoReport::CASHIER => $this->cashierReport($startDate, $endDate),
         };
 
         $perPage = (int) $request->query('per_page', 25);
@@ -55,6 +58,7 @@ class ReportService
             MimoReport::TRANSACTION => $this->transactionReport($startDate, $endDate, $request),
             MimoReport::HOUR_SALES => $this->hourSalesReport($startDate, $endDate),
             MimoReport::ITEM_SALES => $this->itemSalesReport($startDate, $endDate),
+            MimoReport::CASHIER => $this->cashierReport($startDate, $endDate),
         };
 
         return [
@@ -226,5 +230,77 @@ class ReportService
         })->values();
 
         return ['data' => $grouped, 'totals' => $this->buildTotals($startDate, $endDate)];
+    }
+
+    /**
+     * Sourced from orhdr (the legacy Official Receipt ledger), not orlne_pay — orhdr
+     * is the only table with payment history predating this app's split-payment
+     * feature (192 of 193 rows were written by the old system, before 2026-07-31),
+     * and it's what `recordOfficialReceipt()` now writes to going forward once an
+     * order item becomes fully paid. orhdr has two payment-method slots per row
+     * (pay_code/payment, pay_code2/payment2); both are unpacked into separate lines
+     * before grouping so a split payment counts each method correctly. `payment`/
+     * `payment2` are stored negative (accounting convention) in both eras, so we
+     * negate; `amnt_tendered` is NOT used here because legacy rows store it negative
+     * while recordOfficialReceipt() writes it positive — an existing inconsistency
+     * that isn't safe to build totals on without normalizing at the source.
+     *
+     * Caveat: a row only exists once an item is FULLY paid, so a same-day partial
+     * payment (e.g. a deposit toward a balance settled later) won't appear here
+     * until the day it's completed — this report is not a live cash-drawer count.
+     */
+    private function cashierReport(mixed $startDate, mixed $endDate): array
+    {
+        $receipts = OfficialReceipt::query()
+            ->whereNotNull('ord_code_ph')
+            ->whereBetween('trnx_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->where(function ($q) {
+                $q->whereNull('cancel')->orWhere('cancel', '<>', 'Y');
+            })
+            ->get(['pay_code', 'payment', 'pay_code2', 'payment2']);
+
+        $lines = collect();
+
+        foreach ($receipts as $receipt) {
+            if ((float) $receipt->payment != 0) {
+                $lines->push([
+                    'code' => $receipt->pay_code ?: 'UNSPECIFIED',
+                    'amount' => -round((float) $receipt->payment, 2),
+                ]);
+            }
+
+            if (! empty($receipt->pay_code2) && (float) $receipt->payment2 != 0) {
+                $lines->push([
+                    'code' => $receipt->pay_code2,
+                    'amount' => -round((float) $receipt->payment2, 2),
+                ]);
+            }
+        }
+
+        $modeLabels = DB::table('m10')->pluck('mp_desc', 'mp_code');
+
+        $grouped = $lines->groupBy('code')->map(function ($group, $code) use ($modeLabels) {
+            $label = match (true) {
+                $code === PaymentMode::CHARGE_CODE => 'Charge to Account',
+                $code === 'UNSPECIFIED' => 'Unspecified',
+                default => $modeLabels[$code] ?? $code,
+            };
+
+            return [
+                'payment_method' => $label,
+                'transaction_count' => number_format($group->count()),
+                'total_amount' => number_format($group->sum('amount'), 2),
+            ];
+        })->values();
+
+        return [
+            'data' => $grouped,
+            'totals' => [
+                'total_transactions' => $receipts->count(),
+                'total_sales' => $lines->sum('amount'),
+                'total_duration' => 0,
+                'total_socks' => 0,
+            ],
+        ];
     }
 }
