@@ -55,7 +55,7 @@
                             </span>
                         </button>
 
-                        <button 
+                        <button hidden
                             onclick="window.location.href='{{route('playhouse.checkout')}}'"
                             class="group relative px-6 py-4 bg-[var(--color-accent)] text-[var(--color-primary-mid-dark)] border border-[var(--color-primary-mid-dark)] font-semibold text-xl 
                                     rounded-md shadow-lg overflow-hidden transition-all duration-300 

@@ -61,7 +61,7 @@
         <tbody>
             <tr>
                 <td>
-                    <h1>Mimo Playcafe</h1>
+                    <h1>Mimo Play Cafe</h1>
                 </td>
                 <td>
                     <h1 class="report-title">{{ $reportType->label() }}</h1>

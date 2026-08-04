@@ -53,10 +53,11 @@ class PlayHouseController extends Controller
 
     public function checkoutPage()
     {
-        $durations = DurationPrices::all();
-        $items = ItemsPrices::pluck('price', 'item');
+        abort(403);
+        // $durations = DurationPrices::all();
+        // $items = ItemsPrices::pluck('price', 'item');
 
-        return view('pages.playhouse-checkout', compact('durations', 'items'));
+        // return view('pages.playhouse-checkout', compact('durations', 'items')); 
     }
 
     public function store(StorePlayhouseFormRequest $request)
