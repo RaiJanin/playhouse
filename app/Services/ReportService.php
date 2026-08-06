@@ -192,12 +192,27 @@ class ReportService
         $data = $hourLabels->map(function ($label, $hour) use ($grouped) {
             $hourItems = $grouped->get($hour, collect());
 
+            $durationBreakdown = $hourItems->groupBy('durationhours')
+            ->map(function ($durationItems, $durationHours) {
+                return [
+                    'duration' => $durationHours.' hour'.($durationHours == 1 ? '' : 's'),
+                    'count' => number_format($durationItems->count()),
+                    'total_sales' => number_format($durationItems->sum('subtotal'), 2),
+                ];
+            })
+            ->sortKeys()
+            ->values();
+
+            //dd($durationBreakdown);
+
             return [
                 'hour' => $label,
                 'transaction_count' => number_format($hourItems->count()),
                 'total_items' => number_format($hourItems->count()),
                 'total_sales' => number_format($hourItems->sum('subtotal'), 2),
-                'total_duration' => number_format($hourItems->sum('durationsubtotal'), 2),
+                'duration_totals' => $durationBreakdown->map(fn ($d) => "{$d['duration']}: {$d['total_sales']}"),
+                'overall_duration' => number_format($hourItems->sum('durationsubtotal'), 2),
+                'total_guardian' => number_format($hourItems->count('guardian')),
                 'total_socks' => number_format($hourItems->sum('socksqty')),
             ];
         })->values();

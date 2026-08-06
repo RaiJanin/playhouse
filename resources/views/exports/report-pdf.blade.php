@@ -57,6 +57,22 @@
     </style>
 </head>
 <body>
+    @php
+        $rows = $report['data'];
+        $headers = $rows->isNotEmpty() ? array_keys((array) $rows->first()) : [];
+        $numericHeaders = ['transaction_count', 'total_items', 'total_sales', 'overall_duration', 'total_guardian', 'total_socks'];
+
+        $isStructuredList = function ($value) {
+            if (!is_iterable($value)) {
+                return false;
+            }
+            $collection = collect($value);
+            if ($collection->isEmpty()) {
+                return false;
+            }
+            return $collection->every(fn ($item) => is_array($item) || is_object($item));
+        };
+    @endphp
     <table class="header">
         <tbody>
             <tr>
@@ -77,21 +93,43 @@
     <table class="data-table">
         <thead>
             <tr>
-                @foreach(array_keys((array) ($report['data']->first() ?? [])) as $header)
-                    <th>{{ str_replace('_', ' ', ucfirst($header)) }}</th>
+                @foreach($headers as $header)
+                    <th class="{{ in_array($header, $numericHeaders) ? 'text-right' : '' }}">
+                        {{ str_replace('_', ' ', ucfirst($header)) }}
+                    </th>
                 @endforeach
             </tr>
         </thead>
         <tbody>
-            @forelse($report['data'] as $row)
+            @forelse($rows as $row)
                 <tr>
-                    @foreach($row as $value)
-                        <td>{{ is_iterable($value) ? collect($value)->implode(' | ') : $value }}</td>
+                    @foreach($row as $key => $value)
+                        <td class="{{ in_array($key, $numericHeaders) ? 'text-right' : '' }}">
+                            @if ($isStructuredList($value))
+                                <ul class="duration-list">
+                                    @foreach($value as $item)
+                                        @php $item = (array) $item; @endphp
+                                        <li>
+                                            <span>{{ $item[array_key_first($item)] }}</span>
+                                            <span>
+                                                {{ collect($item)->except(array_key_first($item))->implode(', ') }}
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @elseif (is_iterable($value))
+                                {{ collect($value)->implode(' | ') ?: '—' }}
+                            @else
+                                {{ $value !== '' && $value !== null ? $value : '—' }}
+                            @endif
+                        </td>
                     @endforeach
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ count($report['data']->first() ?? []) }}">No data found for the selected period.</td>
+                    <td colspan="{{ max(count($headers), 1) }}" class="no-data">
+                        No data found for the selected period.
+                    </td>
                 </tr>
             @endforelse
         </tbody>
