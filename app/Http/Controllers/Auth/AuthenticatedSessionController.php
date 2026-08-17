@@ -32,7 +32,9 @@ class AuthenticatedSessionController extends Controller
             'logged_in_at' => now()
         ]);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()
+            ->intended(route('dashboard', absolute: false))
+            ->with('show_billing_notice', env('SHOW_BILLING_NOTICE', true));
     }
 
     /**

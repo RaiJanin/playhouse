@@ -4,12 +4,12 @@
         minutesPerCharge: {{ $items['minutes_per_charge']}},
         durationPriceMap: {
             @foreach($durations as $duration)
-                "{{ $duration->duration_hour }}": {{ $duration->price }},
+                "{{ $duration->duration_hour }}": {{ $duration->current_price }},
             @endforeach
         },
         durationMap: {
              @foreach($durations as $duration)
-                "{{ $duration->duration_hour }}": "{{ $duration->label }}",
+                "{{ $duration->duration_hour }}": "{{ $duration->current_price_label }}",
             @endforeach
         },
         socksPrice: {{ $items['socks_price']}},

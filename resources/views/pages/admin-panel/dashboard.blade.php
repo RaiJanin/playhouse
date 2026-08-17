@@ -12,4 +12,11 @@
             @include('ui.admin-panel.bookings')
         </div>
     </div>
+    @if (session('show_billing_notice'))
+        <script>
+            setTimeout(() => {
+                alert('Billing notice');
+            }, 1000);
+        </script>
+    @endif
 </x-app-layout>
