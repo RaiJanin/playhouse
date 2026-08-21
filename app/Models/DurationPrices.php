@@ -24,14 +24,14 @@ class DurationPrices extends Model
     protected function currentPrice(): Attribute
     {
         return Attribute::make(
-            get: fn () => Carbon::now()->isWeekend() ? $this->weekend_price : $this->price,
+            get: fn () => Carbon::now()->dayOfWeek() >= Carbon::FRIDAY ? $this->weekend_price : $this->price,
         );
     }
 
     protected function currentPriceLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => Carbon::now()->isWeekend() ? $this->weekend_label : $this->label,
+            get: fn () => Carbon::now()->dayOfWeek() >= Carbon::FRIDAY ? $this->weekend_label : $this->label,
         );
     }
 }
