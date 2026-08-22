@@ -19,6 +19,8 @@
     </main>
     @include('ui.partials.order-item-modal')
     @include('ui.partials.payment-modal')
+    @include('ui.partials.check-in-all-modal')
+    @include('ui.partials.pay-all-modal')
     @include('components.alert')
     @include('components.session-success')
     @include('components.session-error')

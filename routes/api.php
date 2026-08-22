@@ -30,8 +30,12 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/charge-accounts', [PaymentsController::class, 'chargeAccounts']);
     Route::get('/payment-modes', [PaymentsController::class, 'paymentModes']);
     Route::patch('/order-items/{id}', [PlayHouseController::class, 'updateOrderItem']);
+    Route::patch('/order-items/{id}/check-in', [PlayHouseController::class, 'checkIn']);
     Route::patch('/check-out/{orderNum}', [PlayHouseController::class, 'checkOut']);
+    Route::patch('/orders/{ordCodePh}/check-in-all', [PlayHouseController::class, 'checkInAll']);
+    Route::patch('/orders/{ordCodePh}/check-out-all', [PlayHouseController::class, 'checkOutAll']);
     Route::patch('/order-items/{id}/pay', [PaymentsController::class, 'pay']);
+    Route::patch('/orders/{ordCodePh}/pay-all', [PaymentsController::class, 'payAll']);
     Route::delete('/order-items/{id}/payments/{paymentId}', [PaymentsController::class, 'removePayment']);
     Route::patch('/order-items/{id}/cancel-checkout', [PaymentsController::class, 'cancelCheckout']);
     Route::post('/order-items/{id}/print-qr', [PlayHouseController::class, 'printQr']);

@@ -467,33 +467,7 @@ class PlayHouseController extends Controller
                 ]);
             }
 
-            // time computation
-            $checkIn = Carbon::parse($orderItem->created_at);
-            $checkOut = Carbon::now();
-
-            $paidMinutes = $orderItem->durationhours * 60;
-            $actualMinutes = $checkIn->diffInMinutes($checkOut);
-
-            $maxMinutes = 5 * 60;
-            if($actualMinutes > $maxMinutes)
-            {
-                $actualMinutes = $maxMinutes;
-            }
-
-            $extraCharge = 0;
-
-            if (($actualMinutes > $paidMinutes) && ($orderItem->durationhours !== 5))
-            {
-                $extraMinutes = $actualMinutes - $paidMinutes;
-                $chargeUnits = ceil($extraMinutes / $items['minutes_per_charge']);
-                $extraCharge = $items['charge_of_minutes'] * $chargeUnits;
-
-                $orderItem->lne_xtra_chrg = $extraCharge;
-            }
-
-            $orderItem->checked_out = true;
-            $orderItem->ckout = $checkOut;
-            $orderItem->save();
+            $extraCharge = $this->applyOvertimeCheckout($orderItem, $items);
 
             // update parent order totals
             $order = $orderItem->order;
@@ -520,6 +494,160 @@ class PlayHouseController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Checks out every not-yet-checked-out item under a booking in one transaction,
+     * applying the same overtime math as a single checkOut() per item.
+     */
+    public function checkOutAll($ordCodePh)
+    {
+        try {
+            DB::beginTransaction();
+
+            $order = Orders::where('ord_code_ph', $ordCodePh)->lockForUpdate()->first();
+
+            if (!$order) {
+                DB::rollBack();
+
+                return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+            }
+
+            $items = ItemsPrices::pluck('price', 'item');
+
+            $pendingItems = OrderItems::where('ord_code_ph', $ordCodePh)
+                ->whereNull('ckout')
+                ->get();
+
+            $checkedOutIds = [];
+
+            foreach ($pendingItems as $orderItem) {
+                $extraCharge = $this->applyOvertimeCheckout($orderItem, $items);
+
+                $order->xtra_chrg_amnt += $extraCharge;
+                $order->total_amnt = $orderItem->lne_xtra_chrg + $order->total_amnt;
+                $checkedOutIds[] = $orderItem->id;
+            }
+
+            $order->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'checked_out_count' => count($checkedOutIds),
+                'checked_out_ids' => $checkedOutIds,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function checkInAll($ordCodePh)
+    {
+        try {
+            DB::beginTransaction();
+
+            $order = Orders::where('ord_code_ph', $ordCodePh)->lockForUpdate()->first();
+
+            if (!$order) {
+                DB::rollBack();
+
+                return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+            }
+
+            $pendingItems = OrderItems::where('ord_code_ph', $ordCodePh)
+                ->whereNull('ckin')
+                ->get();
+
+            $checkedInIds = [];
+
+            foreach ($pendingItems as $orderItem) {
+                if (!empty($orderItem->ckout)) {
+                    continue;
+                }
+
+                $orderItem->ckin = Carbon::now();
+                $orderItem->isfreeze = false;
+                $orderItem->save();
+                $checkedInIds[] = $orderItem->id;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'checked_in_count' => count($checkedInIds),
+                'checked_in_ids' => $checkedInIds,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Checks in a single child (mirrors the turnstile's first-check-in branch).
+     * There's no bulk equivalent by design — each child is confirmed individually.
+     */
+    public function checkIn($id)
+    {
+        $orderItem = OrderItems::findOrFail($id);
+
+        if (!empty($orderItem->ckin)) {
+            return response()->json(['success' => false, 'message' => 'This child is already checked in.'], 422);
+        }
+
+        if (!empty($orderItem->ckout)) {
+            return response()->json(['success' => false, 'message' => 'This child has already been checked out.'], 422);
+        }
+
+        $orderItem->ckin = Carbon::now();
+        $orderItem->isfreeze = false;
+        $orderItem->save();
+
+        return response()->json([
+            'success' => true,
+            'orderItem' => $orderItem->fresh('child'),
+        ]);
+    }
+
+    /**
+     * Shared overtime-charge math for a single item's checkout. Mutates and saves
+     * the item (checked_out, ckout, lne_xtra_chrg) and returns the extra charge so
+     * callers can roll it into the parent order's totals themselves.
+     */
+    private function applyOvertimeCheckout(OrderItems $orderItem, $itemsPrices): float
+    {
+        $checkIn = Carbon::parse($orderItem->created_at);
+        $checkOut = Carbon::now();
+
+        $paidMinutes = $orderItem->durationhours * 60;
+        $actualMinutes = $checkIn->diffInMinutes($checkOut);
+
+        $maxMinutes = 5 * 60;
+        if ($actualMinutes > $maxMinutes) {
+            $actualMinutes = $maxMinutes;
+        }
+
+        $extraCharge = 0;
+
+        if (($actualMinutes > $paidMinutes) && ($orderItem->durationhours !== 5)) {
+            $extraMinutes = $actualMinutes - $paidMinutes;
+            $chargeUnits = ceil($extraMinutes / $itemsPrices['minutes_per_charge']);
+            $extraCharge = $itemsPrices['charge_of_minutes'] * $chargeUnits;
+
+            $orderItem->lne_xtra_chrg = $extraCharge;
+        }
+
+        $orderItem->checked_out = true;
+        $orderItem->ckout = $checkOut;
+        $orderItem->save();
+
+        return $extraCharge;
     }
 
     public function getOrderItem($id)

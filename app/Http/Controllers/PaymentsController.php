@@ -223,6 +223,153 @@ class PaymentsController extends Controller
         ]);
     }
 
+    /**
+     * Applies one payment mode/amount across every checked-out, unpaid item under
+     * a booking in a single transaction — oldest item first — splitting the tendered
+     * amount until it's exhausted, exactly like calling pay() per item but atomic.
+     */
+    public function payAll(AddPaymentRequest $request, $ordCodePh)
+    {
+        $data = $request->validated();
+
+        try {
+            DB::beginTransaction();
+
+            $order = Orders::where('ord_code_ph', $ordCodePh)->lockForUpdate()->first();
+
+            if (!$order) {
+                DB::rollBack();
+
+                return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+            }
+
+            $unpaidItems = OrderItems::where('ord_code_ph', $ordCodePh)
+                ->whereNotNull('ckout')
+                ->where('is_paid', false)
+                ->orderBy('id')
+                ->get();
+
+            if ($unpaidItems->isEmpty()) {
+                DB::rollBack();
+
+                return response()->json(['success' => false, 'message' => 'No unpaid, checked-out children to pay.'], 422);
+            }
+
+            $remainingDueByItem = [];
+            $totalDue = 0.0;
+
+            foreach ($unpaidItems as $item) {
+                $due = round($this->amountDue($item) - (float) $item->payments()->sum('amount'), 2);
+                $remainingDueByItem[$item->id] = $due;
+                $totalDue = round($totalDue + $due, 2);
+            }
+
+            $isCash = $data['payment_method'] === PaymentMode::CASH_CODE;
+            $tenderedAmount = $isCash ? (float) $data['cash_tendered'] : (float) $data['amount'];
+
+            if (!$isCash && $tenderedAmount > $totalDue + 0.01) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Amount exceeds the total outstanding balance (₱' . number_format($totalDue, 2) . ').',
+                ], 422);
+            }
+
+            $chargeAccountId = null;
+
+            if ($data['payment_method'] === PaymentMode::CHARGE_CODE) {
+                $chargeAccount = ChargeAccount::firstOrCreate(['name' => trim($data['charge_account_name'])]);
+                $chargeAccountId = $chargeAccount->id;
+            }
+
+            $amountToApply = min($tenderedAmount, $totalDue);
+            $remainingToApply = $amountToApply;
+            $paidItemIds = [];
+            $partiallyPaidCount = 0;
+            $lastPaidItem = null;
+
+            foreach ($unpaidItems as $item) {
+                if ($remainingToApply <= 0.001) {
+                    break;
+                }
+
+                $itemDue = $remainingDueByItem[$item->id];
+
+                if ($itemDue <= 0) {
+                    continue;
+                }
+
+                $amountApplied = round(min($itemDue, $remainingToApply), 2);
+                $remainingToApply = round($remainingToApply - $amountApplied, 2);
+                $lastPaidItem = $item;
+
+                $item->payments()->create([
+                    'ord_code_ph' => $item->ord_code_ph,
+                    'payment_method' => $data['payment_method'],
+                    'amount' => $amountApplied,
+                    'cash_tendered' => $isCash ? $amountApplied : null,
+                    'change_amnt' => null,
+                    'reference' => $data['reference'] ?? null,
+                    'remarks' => $data['remarks'] ?? null,
+                    'charge_account_id' => $chargeAccountId,
+                    'paid_at' => Carbon::now(),
+                ]);
+
+                $item->cash_tendered = (float) $item->payments()->sum('cash_tendered');
+                $item->change_amnt = (float) $item->payments()->sum('change_amnt');
+
+                $totalPaidForItem = round((float) $item->payments()->sum('amount'), 2);
+
+                if ($totalPaidForItem >= $this->amountDue($item) - 0.01) {
+                    $item->is_paid = true;
+                    $item->paid_at = Carbon::now();
+                    $item->checked_out = true;
+                    $paidItemIds[] = $item->id;
+                } else {
+                    $partiallyPaidCount++;
+                }
+
+                $item->save();
+            }
+
+            // Any leftover cash tendered beyond the total due is change — folded
+            // onto the last item's payment so the item-level cash/change sums stay
+            // internally consistent (see PaymentsController::pay() for the pattern).
+            $changeAmnt = $isCash ? round($tenderedAmount - $amountToApply, 2) : 0.0;
+
+            if ($isCash && $changeAmnt > 0 && $lastPaidItem) {
+                $lastPayment = $lastPaidItem->payments()->latest('id')->first();
+                $lastPayment->change_amnt = $changeAmnt;
+                $lastPayment->cash_tendered += $changeAmnt;
+                $lastPayment->save();
+
+                $lastPaidItem->cash_tendered = (float) $lastPaidItem->payments()->sum('cash_tendered');
+                $lastPaidItem->change_amnt = (float) $lastPaidItem->payments()->sum('change_amnt');
+                $lastPaidItem->save();
+            }
+
+            DB::commit();
+
+            foreach ($paidItemIds as $id) {
+                $this->recordOfficialReceipt(OrderItems::find($id));
+            }
+            $this->syncOrderPaymentTotals($ordCodePh);
+
+            return response()->json([
+                'success' => true,
+                'items_paid' => count($paidItemIds),
+                'items_partial' => $partiallyPaidCount,
+                'total_applied' => $amountToApply,
+                'change_amnt' => $changeAmnt,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function removePayment($id, $paymentId)
     {
         $orderItem = OrderItems::findOrFail($id);

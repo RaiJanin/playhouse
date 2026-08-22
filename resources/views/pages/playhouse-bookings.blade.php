@@ -47,6 +47,11 @@
         </div>
         <div class="{{ $searchedOrder ? 'flex-1' : ''}}">
             @if($searchedOrder)
+                @php
+                    $pendingCheckIn = $searchedOrder->orderItems->whereNull('ckin');
+                    $pendingCheckOut = $searchedOrder->orderItems->whereNotNull('ckin')->whereNull('ckout');
+                    $unpaidCheckedOut = $searchedOrder->orderItems->whereNotNull('ckout')->where('is_paid', false);
+                @endphp
                 <div class="rounded-xl border border-white/30 bg-[var(--color-primary-full-dark)] backdrop-blur shadow-lg p-4">
                     <div class="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-white/20">
                         <div>
@@ -97,6 +102,33 @@
                             <dd class="text-white font-bold text-3xl leading-tight">₱{{ number_format($searchedOrder->balance, 2) }}</dd>
                         </div>
                     </div>
+
+                    <div class="justify-end flex flex-wrap gap-2 pt-3 mt-3 border-t border-white/20">
+                        <button hidden type="button" id="booking-check-in-all-btn"
+                            data-ord-code="{{ $searchedOrder->ord_code_ph }}"
+                            data-pending='@json($pendingCheckIn->map(fn ($item) => [
+                                "id" => $item->id,
+                                "name" => trim(($item->child->firstname ?? "").' '.($item->child->lastname ?? "")) ?: "Child",
+                            ])->values())'
+                            class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-blue-600 text-white hover:opacity-80 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                            {{ $pendingCheckIn->isEmpty() ? 'disabled' : '' }}>
+                            <i class="fa-solid fa-right-to-bracket mr-1"></i> Check-In All 
+                        </button>
+                        <button hidden type="button" id="booking-check-out-all-btn"
+                            data-ord-code="{{ $searchedOrder->ord_code_ph }}"
+                            class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-orange-600 text-white hover:opacity-80 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                            {{ $pendingCheckOut->isEmpty() ? 'disabled' : '' }}>
+                            <i class="fa-solid fa-right-from-bracket mr-1"></i> Check-Out All 
+                        </button>
+                        <button type="button" id="booking-pay-all-btn"
+                            data-ord-code="{{ $searchedOrder->ord_code_ph }}"
+                            data-total-due="{{ $searchedOrder->balance }}"
+                            data-items-count="{{ $unpaidCheckedOut->count() }}"
+                            class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-green-600 text-white hover:opacity-80 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                            {{ $unpaidCheckedOut->isEmpty() || $searchedOrder->balance <= 0 ? 'disabled' : '' }}>
+                            <i class="fa-solid fa-money-bill-wave mr-1"></i> Pay All
+                        </button>
+                    </div>
                 </div>
             @else
                 <x-application-logo-2 class="block fill-current text-gray-800" />
@@ -116,5 +148,5 @@
 @endsection
 
 @section('scripts')
-    @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js'])
+    @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js', 'resources/js/modules/bulkBookingActions.js'])
 @endsection
