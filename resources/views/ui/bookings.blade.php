@@ -156,7 +156,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         @if(!$item->durationhours)
                             {{ 'N/A' }}
-                        @elseif($item->durationhours == 5)
+                        @elseif($item->durationhours === 5)
                             {{ 'Unlimited' }}
                         @else
                             {{ $item->durationhours . 'hr' }}
