@@ -9,6 +9,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('images/mimo_logo_steady.ico') }}">
     @vite(['resources/css/app.css', 'resources/js/dependencies.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     @yield('styles')
 </head>
 <body class="min-h-screen px-5 py-10 bg-gradient-to-r from-[var(--color-accent-secondary-light)] to-[var(--color-accent-secondary)]">

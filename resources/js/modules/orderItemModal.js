@@ -11,13 +11,14 @@ let socksPrice = 0;
 let countdownTimer = null;
 let saving = false;
 
-let closeBtn, qrChildEl, qrGuardianEl, countdownEl, countdownLabelEl, readyBadgeEl,
+let closeBtn, qrChildEl, qrGuardianEl, qrChildPreviewEl, qrGuardianPreviewEl,
+    countdownEl, countdownLabelEl, readyBadgeEl,
     loadingEl, bodyEl, childCodeEl, childNameEl, childAgeInput, durationSelect,
     startTimeEl, endTimeEl, outForBreakInput, inFromBreakInput, guardianNameInput,
     guardianMobileInput, guardianAgeInput, guardianAuthorizedInput, promoSelect,
     idNumberEl, bookingNumberEl, socksQtyInput, hoursEl, playtimeAmountEl,
     socksAmountEl, othersInput, subtotalEl, discountEl, lineTotalEl,
-    saveBtn, checkoutBtn, checkoutLabelEl, payBtn;
+    saveBtn, checkoutBtn, checkoutLabelEl, payBtn, printBtn;
 
 /**
  * Formats remaining play time as HH:MM:SS, clamped at 00:00:00.
@@ -51,6 +52,8 @@ function onMount() {
     closeBtn = document.getElementById('order-modal-close-btn');
     qrChildEl = document.getElementById('order-modal-qr-child');
     qrGuardianEl = document.getElementById('order-modal-qr-guardian');
+    qrChildPreviewEl = document.getElementById('order-modal-qr-child-preview');
+    qrGuardianPreviewEl = document.getElementById('order-modal-qr-guardian-preview');
     countdownEl = document.getElementById('order-modal-countdown');
     countdownLabelEl = document.getElementById('order-modal-countdown-label');
     readyBadgeEl = document.getElementById('order-modal-ready-badge');
@@ -83,6 +86,7 @@ function onMount() {
     checkoutBtn = document.getElementById('order-modal-checkout-btn');
     checkoutLabelEl = document.getElementById('order-modal-checkout-label');
     payBtn = document.getElementById('order-modal-pay-btn');
+    printBtn = document.getElementById('order-modal-print-btn');
 }
 
 function showModal() {
@@ -122,6 +126,25 @@ function startCountdown() {
     };
     tick();
     countdownTimer = setInterval(tick, 1000);
+}
+
+/**
+ * Renders (or clears) a QR code image inside the given container.
+ *
+ * @param {HTMLElement} container
+ * @param {string} text
+ * @returns {void}
+ */
+function renderQrCode(container, text) {
+    if (!container) return;
+    container.innerHTML = '';
+    if (!text) return;
+    new QRCode(container, { text, width: 100, height: 100 });
+}
+
+function updateQrPreviews() {
+    renderQrCode(qrChildPreviewEl, qrChildEl.value.trim());
+    renderQrCode(qrGuardianPreviewEl, qrGuardianEl.value.trim());
 }
 
 function populateDurationsSelect() {
@@ -189,6 +212,7 @@ function populateForm(data) {
 
     qrChildEl.value = orderItem.qr_child || '';
     qrGuardianEl.value = orderItem.qr_guardian || '';
+    updateQrPreviews();
 
     populateDurationsSelect();
     populatePromoSelect();
@@ -237,6 +261,7 @@ async function open(detail) {
     qrChildEl.value = detail.qrChild || '';
     qrGuardianEl.value = detail.qrGuardian || '';
     bookingNumberEl.textContent = detail.bookId || '';
+    updateQrPreviews();
 
     loadingEl.classList.remove('hidden');
     bodyEl.classList.add('hidden');
@@ -305,6 +330,87 @@ function openPaymentModal() {
     window.dispatchEvent(new CustomEvent('open-payment-modal', { detail: { id } }));
 }
 
+function getQrDataUrl(container) {
+    const canvas = container?.querySelector('canvas');
+    return canvas ? canvas.toDataURL('image/png') : null;
+}
+
+/**
+ * Loads a PDF blob into a hidden iframe and opens the browser's print dialog for it.
+ *
+ * @param {string} blobUrl
+ * @returns {void}
+ */
+function printPdfBlob(blobUrl) {
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.src = blobUrl;
+
+    const cleanup = () => {
+        iframe.remove();
+        URL.revokeObjectURL(blobUrl);
+    };
+
+    iframe.addEventListener('load', () => {
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            iframe.contentWindow.addEventListener('afterprint', cleanup);
+        } catch (err) {
+            console.error(err);
+            window.open(blobUrl, '_blank');
+            cleanup();
+        }
+    });
+
+    document.body.appendChild(iframe);
+    setTimeout(cleanup, 60000);
+}
+
+async function printQrCodes() {
+    if (!currentId) return;
+
+    const childCode = qrChildEl.value.trim();
+    const guardianCode = qrGuardianEl.value.trim();
+
+    if (!childCode && !guardianCode) {
+        App.component.showAlert('No QR codes to print.', 'error');
+        return;
+    }
+
+    printBtn.disabled = true;
+    try {
+        const response = await fetch(`${API_ROUTES.orderItemURL}/${currentId}/print-qr`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/pdf',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({
+                qr_child_image: getQrDataUrl(qrChildPreviewEl),
+                qr_guardian_image: getQrDataUrl(qrGuardianPreviewEl),
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        printPdfBlob(blobUrl);
+    } catch (err) {
+        console.error(err);
+        App.component.showAlert('Failed to generate QR PDF.', 'error');
+    } finally {
+        printBtn.disabled = false;
+    }
+}
+
 function init() {
     onMount();
     if (!closeBtn) return; // modal partial not on this page
@@ -317,9 +423,12 @@ function init() {
         el.addEventListener('change', recompute);
     });
 
+    [qrChildEl, qrGuardianEl].forEach(el => el.addEventListener('input', updateQrPreviews));
+
     saveBtn.addEventListener('click', save);
     checkoutBtn.addEventListener('click', checkOut);
     payBtn.addEventListener('click', openPaymentModal);
+    printBtn.addEventListener('click', printQrCodes);
 }
 
 document.addEventListener('DOMContentLoaded', init);

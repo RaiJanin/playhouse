@@ -15,11 +15,13 @@
                     <label for="order-modal-qr-child" class="block text-sm font-semibold text-gray-700 mb-1">Child QR Code</label>
                     <input type="text" id="order-modal-qr-child" placeholder="N/A"
                         class="w-full rounded-md py-2 px-3 bg-yellow-100 border border-yellow-300 text-gray-800 font-medium shadow-sm">
+                    <div hidden id="order-modal-qr-child-preview" class="mt-2 flex justify-center"></div>
                 </div>
                 <div>
                     <label for="order-modal-qr-guardian" class="block text-sm font-semibold text-gray-700 mb-1">Guardian QR Code</label>
                     <input type="text" id="order-modal-qr-guardian" placeholder="N/A"
                         class="w-full rounded-md py-2 px-3 bg-orange-200 border border-orange-400 text-gray-800 font-medium shadow-sm">
+                    <div hidden id="order-modal-qr-guardian-preview" class="mt-2 flex justify-center"></div>
                 </div>
             </div>
 
@@ -156,6 +158,10 @@
 
         <!-- Buttons -->
         <div class="flex justify-end gap-2 py-3 px-6 bg-[var(--color-primary-transparent)]">
+            <button type="button" id="order-modal-print-btn"
+                class="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-primary)] font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
+                <i class="fa-solid fa-qrcode mr-1"></i> Print QR
+            </button>
             <button type="button" id="order-modal-save-btn"
                 class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> Save

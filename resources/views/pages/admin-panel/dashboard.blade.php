@@ -15,7 +15,7 @@
     @if (session('show_billing_notice'))
         <script>
             setTimeout(() => {
-                alert('Billing notice');
+                alert('Billing notice: Please be sure to settle your software bills for continue support. If you have already made a full payment, please disregard this message');
             }, 1000);
         </script>
     @endif

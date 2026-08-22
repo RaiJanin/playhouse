@@ -570,6 +570,29 @@ class PlayHouseController extends Controller
         ]);
     }
 
+    public function printQr(Request $request, $id)
+    {
+        $data = $request->validate([
+            'qr_child_image' => 'nullable|string',
+            'qr_guardian_image' => 'nullable|string',
+        ]);
+
+        $orderItem = OrderItems::with('child.guardians')->findOrFail($id);
+        $guardian = $orderItem->child?->guardians->first();
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadHTML(view('exports.qr-print', [
+            'orderItem' => $orderItem,
+            'child' => $orderItem->child,
+            'guardian' => $guardian,
+            'qrChildImage' => $data['qr_child_image'] ?? null,
+            'qrGuardianImage' => $data['qr_guardian_image'] ?? null,
+        ])->render());
+        $pdf->setPaper([0, 0, 226.77, 340.16]); // ~80mm x 120mm receipt-style page
+
+        return $pdf->stream("qr-codes-{$orderItem->ord_code_ph}.pdf");
+    }
+
     public function updateOrderItem(UpdateOrderItemRequest $request, $id)
     {
         $data = $request->validated();
