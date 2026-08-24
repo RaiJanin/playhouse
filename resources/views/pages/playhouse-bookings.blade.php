@@ -148,5 +148,5 @@
 @endsection
 
 @section('scripts')
- @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js'])
+ @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js', 'resources/js/modules/bulkBookingActions.js'])
 @endsection
