@@ -76,7 +76,7 @@
                 $totals = $report['totals'];
             @endphp
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Transactions</div>
                     <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_transactions']) }}</div>
@@ -84,10 +84,6 @@
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Sales</div>
                     <div class="text-2xl font-bold text-white mt-1">₱{{ number_format($totals['total_sales'], 2) }}</div>
-                </div>
-                <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
-                    <div class="text-xs text-gray-300 uppercase tracking-wider">Total Duration</div>
-                    <div class="text-2xl font-bold text-white mt-1">{{ number_format($totals['total_duration'], 2) }} ₱/hour</div>
                 </div>
                 <div class="bg-[var(--color-primary-mid-dark)] rounded-lg p-4 text-center">
                     <div class="text-xs text-gray-300 uppercase tracking-wider">Total Socks</div>
