@@ -716,7 +716,7 @@ class PlayHouseController extends Controller
             'qrChildImage' => $data['qr_child_image'] ?? null,
             'qrGuardianImage' => $data['qr_guardian_image'] ?? null,
         ])->render());
-        $pdf->setPaper([0, 0, 226.77, 340.16]); // ~80mm x 120mm receipt-style page
+        $pdf->setPaper([0, 0, env('PAPER_WIDTH_POINTS', 226.77), env('PAPER_HEIGHT_POINTS', 340.16)]);
 
         return $pdf->stream("qr-codes-{$orderItem->ord_code_ph}.pdf");
     }
