@@ -6,6 +6,10 @@ import { renderPagination } from "../utilities/pagination.js";
 import { emptyStateTable, tableSkeleton } from '../components/tablePlaceholders.js'
 
 let searchIn
+let startDateEl
+let endDateEl
+let startDateVal
+let endDateVal
 let searchState = ''
 let searchBtn
 let meta = null
@@ -13,6 +17,7 @@ let dataRowsBody
 let pageState = 1
 let refreshInterval = null
 
+const todayStr = () => new Date().toISOString().slice(0, 10)
 const api = window.axios
 
 const renderTableRows = (items) => {
@@ -139,7 +144,7 @@ const stopLoop = () => {
 
 const displayData = async (page) => {
     pageState = page
-    meta = await getData(searchState, pageState)
+    meta = await getData(searchState, startDateVal, endDateVal, pageState)
 
     renderTableRows(meta.data)
 
@@ -169,14 +174,14 @@ const handlePaginationCallback = async (page) => {
 }
 
 const handleSearch = async () => {
-    if(!searchState && !searchIn.value.trim()) return
-
     dataRowsBody.innerHTML = tableSkeleton();
     stopLoop();
     disableButtons(true);
 
     try {
         searchState = searchIn.value.trim()
+        startDateVal = startDateEl.value
+        endDateVal = endDateVal.value
         pageState = 1
         await displayData(pageState)
     } catch (err) {
@@ -189,9 +194,9 @@ const handleSearch = async () => {
 
 }
 
-const getData = async(search = null, page) => {
+const getData = async(search = null, startDate = todayStr(), endDate = todayStr(), page) => {
     try {
-        const response = await api.get(`/api/get-inhouse?search=${search}&page=${page}`)
+        const response = await api.get(`/api/get-inhouse?search=${search}&page=${page}&start_date=${startDate}&end_date=${endDate}`)
 
         if(!response.data.success) {
             App.component.showAlert(response.data.message, 'error')
@@ -216,8 +221,10 @@ const disableButtons = (disable) => {
 
 const onMount = () => {
     searchIn = document.getElementById('search-it')
+    startDateEl = document.getElementById('start_date')
+    endDateEl = document.getElementById('end_date')
     searchBtn = document.getElementById('filter-btn')
-    dataRowsBody = document.getElementById("data-rows");
+    dataRowsBody = document.getElementById("data-rows")
 }
 
 const attachEventListeners = () => {

@@ -190,6 +190,7 @@ class TurnstileController extends Controller
             }
 
             return response()->json([
+                'success' => true,
                 'message' => 'Processed Successfully',
                 'processedDatas' => array_map(function ($item) {
                     return [

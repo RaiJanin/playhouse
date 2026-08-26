@@ -25,8 +25,9 @@
             <input type="email" id="parentEmail" name="parentEmail" class="bg-primary-200 w-full px-4 py-2 border border-[var(--color-primary)] shadow-md rounded-xl font-semibold focus:outline-none focus:border-[var(--color-primary)] focus:shadow-none transition-all duration-300" required />
         </div>
         <div>
-            <label for="parentBirthday" class="block text-base font-semibold text-gray-900 mb-2">Birthday <span class="text-red-600">*</span></label>
-            <div id="parentBirthday" data-birthday-dropdown data-name="parentBirthday" required class="bg-primary-200 rounded-lg"></div>
+            <label for="parentBirthday" class="block text-base font-semibold text-gray-900 mb-2">Birthday</label>
+            <div id="parentBirthday" data-birthday-dropdown data-name="parentBirthday" data-year-optional required class="bg-primary-200 rounded-lg"></div>
+            <p class="text-xs text-gray-500 mt-1">Year is optional.</p>
             <input type="hidden" id="parentBirthday-hidden" name="parentBirthday">
         </div>
     </div>

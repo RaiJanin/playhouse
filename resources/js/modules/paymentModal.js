@@ -224,7 +224,7 @@ function populate(data) {
         paidSection.classList.remove('hidden');
         paidAtEl.textContent = data.paid_at ? new Date(data.paid_at).toLocaleString() : '';
         actionsEl.classList.add('hidden');
-    } else if (data.checked_out) {
+    } else  {
         unpaidSection.classList.remove('hidden');
         methodSelect.value = CASH_CODE;
         cashInput.value = '';
@@ -235,10 +235,7 @@ function populate(data) {
         applyMethodFieldVisibility();
         recomputeChange();
         cancelBtn.disabled = (data.payments || []).length > 0;
-    } else {
-        notReadyEl.classList.remove('hidden');
-        actionsEl.classList.add('hidden');
-    }
+    } 
 }
 
 async function open(detail) {

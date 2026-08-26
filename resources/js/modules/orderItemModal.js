@@ -18,7 +18,7 @@ let closeBtn, qrChildEl, qrGuardianEl, qrChildPreviewEl, qrGuardianPreviewEl,
     guardianMobileInput, guardianAgeInput, guardianAuthorizedInput, promoSelect,
     idNumberEl, bookingNumberEl, socksQtyInput, hoursEl, playtimeAmountEl,
     socksAmountEl, othersInput, subtotalEl, discountEl, lineTotalEl,
-    saveBtn, checkoutBtn, checkoutLabelEl, payBtn, printBtn;
+    saveBtn, checkoutBtn, checkinBtn, checkoutLabelEl, checkinLabelEl, payBtn, printBtn;
 
 /**
  * Formats remaining play time as HH:MM:SS, clamped at 00:00:00.
@@ -84,7 +84,9 @@ function onMount() {
     lineTotalEl = document.getElementById('order-modal-line-total');
     saveBtn = document.getElementById('order-modal-save-btn');
     checkoutBtn = document.getElementById('order-modal-checkout-btn');
+    checkinBtn = document.getElementById('order-modal-checkin-btn');
     checkoutLabelEl = document.getElementById('order-modal-checkout-label');
+    checkinLabelEl = document.getElementById('order-modal-checkin-label');
     payBtn = document.getElementById('order-modal-pay-btn');
     printBtn = document.getElementById('order-modal-print-btn');
 }
@@ -192,9 +194,35 @@ function applyBreakAvailability() {
 
 function applyCheckedOutState() {
     const isCheckedOut = !!orderItem.checked_out;
-    checkoutBtn.disabled = isCheckedOut;
-    checkoutLabelEl.textContent = isCheckedOut ? 'Already Checked Out' : 'Check Out';
-    payBtn.disabled = !isCheckedOut;
+    const isCheckedin = !!orderItem?.ckin;
+
+    const checkoutState = () => {
+        let stateLabel = 'Check Out'
+        let dsAble = false
+
+        if(!isCheckedin) {
+            stateLabel = 'Not Checked in Yet'
+            dsAble = true
+        } else if (isCheckedOut) {
+            stateLabel = 'Already Checked Out'
+            dsAble = true
+        }
+
+        return {
+            stateLabel, dsAble
+        }
+    }
+
+    const { stateLabel, dsAble } = checkoutState();
+
+    checkoutBtn.disabled = dsAble;
+    checkoutLabelEl.textContent = stateLabel;
+}
+
+function applyCheckedInState() {
+    const isCheckedIn = orderItem?.ckin ? true : false;
+    checkinBtn.disabled = isCheckedIn;
+    checkinLabelEl.textContent = isCheckedIn ? 'Already Checked In' : 'Check In';
 }
 
 function populateForm(data) {
@@ -233,6 +261,7 @@ function populateForm(data) {
 
     applyBreakAvailability();
     applyCheckedOutState();
+    applyCheckedInState();
     recompute();
     startCountdown();
 }
@@ -323,8 +352,43 @@ async function checkOut() {
     }
 }
 
+async function checkIn() {
+    console.log('QR to check in: '+qrChildEl.value.trim())
+
+    if (saving || !currentId || orderItem.checked_out) return;
+    saving = true;
+    saveBtn.disabled = true;
+    checkinBtn.disabled = true;
+
+    const checkinPayload = {
+        qr: qrChildEl.value.trim(),
+        status: 'entrance'
+    }
+
+    try {
+        const response = await submitData(API_ROUTES.checkInURL, checkinPayload, 'POST', currentId);
+
+        console.log(response);
+
+        if (!response.success) {
+            App.component.showAlert(response.message || 'Checkin failed.', 'error');
+            return;
+        }
+
+        App.component.showAlert('Checked in successfully.', 'success');
+        setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+        App.component.showAlert('Failed to check in. Please try again.', 'error');
+        App.component.criticalAlert(err?.data?.error || err?.statusText || 'Unknown error');
+    } finally {
+        saving = false;
+        saveBtn.disabled = false;
+        checkinBtn.disabled = false;
+    }
+}
+
 function openPaymentModal() {
-    if (!currentId || !orderItem.checked_out) return;
+    if (!currentId) return;
     const id = currentId;
     closeModal();
     window.dispatchEvent(new CustomEvent('open-payment-modal', { detail: { id } }));
@@ -427,6 +491,7 @@ function init() {
 
     saveBtn.addEventListener('click', save);
     checkoutBtn.addEventListener('click', checkOut);
+    checkinBtn.addEventListener('click', checkIn);
     payBtn.addEventListener('click', openPaymentModal);
     printBtn.addEventListener('click', printQrCodes);
 }

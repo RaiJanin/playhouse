@@ -165,7 +165,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         @if($item->status === 'normal')
                             {!!
-                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Normal</span>'
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-teal-100 text-teal-800">On Session</span>'
                             !!}
                         @elseif ($item->status === 'due')
                             {!!
@@ -181,12 +181,16 @@
                             !!}
                         @elseif ($item->status === 'done')
                             {!!
-                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Ready to Pay</span>'
+                                '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Done</span>'
                             !!}
                         @elseif ($item->status === 'paid')
                             {!!
                                 '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Paid</span>'
                             !!}
+                        @elseif ($item->status === 'completed')
+                        {!!
+                            '<span class="px-2 inline-flex text-xs font-semibold rounded-full bg-[var(--color-primary-transparent)] text-[var(--color-primary-full-dark)]">Completed</span>'
+                        !!}
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

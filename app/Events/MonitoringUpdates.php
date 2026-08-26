@@ -14,7 +14,7 @@ class MonitoringUpdates implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $data;
+    public mixed $data;
 
     /**
      * Create a new event instance.

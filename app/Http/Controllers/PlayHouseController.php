@@ -957,32 +957,24 @@ class PlayHouseController extends Controller
                         $hours = floor($remainingMinutes / 60);
                         $minutes = $remainingMinutes % 60;
                         $item->remainmins = "{$hours}hr {$minutes}min";
-                        $item->status = "normal";
+
+                        $due = $ckin->copy()->addHours($item->durationhours);
+                        if ($now->lt($due)) {
+                            $item->status = "normal";
+                        } else {
+                            $lateMinutes = $due->diffInMinutes($now);
+                            $item->status = $lateMinutes <= 10 ? "due" : "overdue";
+                        }
                     }
                     else if(!empty($item->ckin) && !empty($item->ckout))
                     {
                         $item->remainmins = 'done';
-                        $item->status = $item->is_paid ? "paid" : "done";
+                        $item->status = $item->is_paid ? "completed" : "done";
                     }
                     else if(empty($item->ckin))
                     {
                         $item->remainmins = "0hr 0min";
-                        $item->status = "booked";
-                    }
-
-                    if(!$item->ckout && !empty($item->ckin))
-                    {
-                        $checkin = Carbon::parse($item->ckin);
-                        $due = $checkin->copy()->addHours($item->durationhours);
-
-                        $lateMinutes = $due->diffInMinutes($now);
-
-                        if ($lateMinutes <= 30) {
-                            $item->status = "due";
-                        } else {
-                            $item->status = "overdue";
-                        }
-                        
+                        $item->status = $item->is_paid ? "paid" : "booked";
                     }
 
                     return $item;

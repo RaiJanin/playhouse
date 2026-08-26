@@ -50,7 +50,7 @@
                 @php
                     $pendingCheckIn = $searchedOrder->orderItems->whereNull('ckin');
                     $pendingCheckOut = $searchedOrder->orderItems->whereNotNull('ckin')->whereNull('ckout');
-                    $unpaidCheckedOut = $searchedOrder->orderItems->whereNotNull('ckout')->where('is_paid', false);
+                    $unpaidCheckedOut = $searchedOrder->orderItems->where('is_paid', false);
                 @endphp
                 <div class="rounded-xl border border-white/30 bg-[var(--color-primary-full-dark)] backdrop-blur shadow-lg p-4">
                     <div class="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-white/20">
@@ -128,6 +128,7 @@
                             {{ $unpaidCheckedOut->isEmpty() || $searchedOrder->balance <= 0 ? 'disabled' : '' }}>
                             <i class="fa-solid fa-money-bill-wave mr-1"></i> Pay All
                         </button>
+                        {{ $unpaidCheckedOut?->count() }}
                     </div>
                 </div>
             @else

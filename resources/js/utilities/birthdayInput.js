@@ -17,6 +17,7 @@ export function attachBirthdayDropdown(container) {
 
     const originalName = container.getAttribute('data-name') || 'birthday';
     const isRequired = container.hasAttribute('required');
+    const yearOptional = container.hasAttribute('data-year-optional');
     const existingValue = container.dataset.birthdayValue || '';
 
     // Parse existing value (ISO format YYYY-MM-DD)
@@ -90,13 +91,19 @@ export function attachBirthdayDropdown(container) {
         const dd = daySelect.value;
         const yyyy = yearSelect.value;
 
-        if (mm && dd && yyyy) {
-            const isoDate = `${yyyy}-${mm}-${dd}`;
+        // When the year is optional, month + day alone are enough.
+        const complete = yearOptional ? (mm && dd) : (mm && dd && yyyy);
+
+        if (complete) {
+            // If the year was left blank, fall back to the current year so the
+            // stored value stays a valid full date (the column requires YYYY-MM-DD).
+            const isoYear = yyyy || '1900';
+            const isoDate = `${isoYear}-${mm}-${dd}`;
             hiddenInput.value = isoDate;
             container.dataset.birthdayValue = isoDate;
-            
+
             // Validate date
-            const daysInMonth = new Date(parseInt(yyyy), parseInt(mm), 0).getDate();
+            const daysInMonth = new Date(parseInt(isoYear), parseInt(mm), 0).getDate();
             if (parseInt(dd) > daysInMonth) {
                 daySelect.setCustomValidity('Invalid day for selected month');
                 container.classList.add('birthday-invalid');
@@ -111,7 +118,7 @@ export function attachBirthdayDropdown(container) {
         } else {
             hiddenInput.value = '';
             container.dataset.birthdayValue = '';
-            
+
             if (isRequired && (mm || dd || yyyy)) {
                 container.classList.add('birthday-invalid');
                 container.classList.remove('birthday-valid');
@@ -180,6 +187,7 @@ export function validateDateInputs(scope = document) {
         const yearEl = field.querySelector('.birthday-year-select');
         const hostContainer = field.closest('[data-birthday-dropdown]');
         const isRequired = hostContainer ? hostContainer.hasAttribute('required') : false;
+        const yearOptional = hostContainer ? hostContainer.hasAttribute('data-year-optional') : false;
         const hasAnyValue = Boolean(
             (monthEl && monthEl.value) ||
             (dayEl && dayEl.value) ||
@@ -193,7 +201,8 @@ export function validateDateInputs(scope = document) {
 
         const month = checkInput(monthEl);
         const day = checkInput(dayEl);
-        const year = checkInput(yearEl);
+        // The year is only required when the field isn't flagged year-optional.
+        const year = yearOptional ? true : checkInput(yearEl);
 
         if (!(month && day && year)) {
             const missingMonth = monthEl.dataset.name || monthEl.getAttribute('aria-label');

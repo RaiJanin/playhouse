@@ -7,6 +7,7 @@ export const API_ROUTES = {
     checkPhoneURL: '/api/check-phone',
     getOrdersURL: '/api/get-orders',
     checkOutURL: '/api/check-out',
+    checkInURL: '/api/turnstile-srch',
     getMarketURL: '/api/get-markets',
     orderItemURL: '/api/order-items',
     ordersURL: '/api/orders',

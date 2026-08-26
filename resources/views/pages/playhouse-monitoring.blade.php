@@ -31,7 +31,7 @@
                         class="bg-white w-full px-4 py-2 border border-[var(--color-primary)] shadow rounded-l-xl font-semibold focus:outline-none focus:border-[var(--color-primary-lighter)] focus:shadow-none transition-all duration-300"
                     >
                     <button 
-                        id="filter-btn"
+                        disabled
                         type="button" 
                         class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-r-xl hover:bg-[var(--color-primary-light)] transition-all duration-300"
                     >
@@ -43,6 +43,33 @@
                 </div>
             </div>
         </div>
+        <div class="flex flex-col">
+            <label for="start_date" class="block text-sm font-semibold text-gray-700 mb-1">From Date</label>
+            <input
+                type="date"
+                id="start_date"
+                name="start_date"
+                class="bg-white w-full px-4 py-2 border border-[var(--color-primary)] shadow rounded-xl font-semibold focus:outline-none focus:border-[var(--color-primary-lighter)] focus:shadow-none transition-all duration-300"
+                value="{{ request('start_date', now()->format('Y-m-d')) }}"
+            >
+        </div>
+        <div class="flex flex-col">
+            <label for="end_date" class="block text-sm font-semibold text-gray-700 mb-1">To Date</label>
+            <input
+                type="date"
+                id="end_date"
+                name="end_date"
+                class="bg-white w-full px-4 py-2 border border-[var(--color-primary)] shadow rounded-xl font-semibold focus:outline-none focus:border-[var(--color-primary-lighter)] focus:shadow-none transition-all duration-300"
+                value="{{ request('end_date', now()->format('Y-m-d')) }}"
+            >
+        </div>
+        <button
+            type="button"
+            id="filter-btn"
+            class="flex self-end px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-xl hover:bg-[var(--color-primary-light)] transition-all duration-300"
+        >
+            Filter
+        </button>
     </div>
     <div class="overflow-x-auto mt-3 sm:px-8 py-2">
         <table class="min-h-full w-full divide-y divide-gray-200">

@@ -144,10 +144,6 @@ class PaymentsController extends Controller
 
         $orderItem = OrderItems::findOrFail($id);
 
-        if (empty($orderItem->ckout)) {
-            return response()->json(['success' => false, 'message' => 'This child has not been checked out yet.'], 422);
-        }
-
         if ($orderItem->is_paid) {
             return response()->json(['success' => false, 'message' => 'This order item is already fully paid.'], 422);
         }
@@ -206,7 +202,6 @@ class PaymentsController extends Controller
         if ($totalPaid >= $amountDue - 0.01) {
             $orderItem->is_paid = true;
             $orderItem->paid_at = Carbon::now();
-            $orderItem->checked_out = true;
         }
 
         $orderItem->save();
@@ -244,7 +239,6 @@ class PaymentsController extends Controller
             }
 
             $unpaidItems = OrderItems::where('ord_code_ph', $ordCodePh)
-                ->whereNotNull('ckout')
                 ->where('is_paid', false)
                 ->orderBy('id')
                 ->get();
@@ -324,7 +318,6 @@ class PaymentsController extends Controller
                 if ($totalPaidForItem >= $this->amountDue($item) - 0.01) {
                     $item->is_paid = true;
                     $item->paid_at = Carbon::now();
-                    $item->checked_out = true;
                     $paidItemIds[] = $item->id;
                 } else {
                     $partiallyPaidCount++;
