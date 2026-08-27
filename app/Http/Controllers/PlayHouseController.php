@@ -996,7 +996,7 @@ class PlayHouseController extends Controller
             'qrChildImage' => $data['qr_child_image'] ?? null,
             'qrGuardianImage' => $data['qr_guardian_image'] ?? null,
         ])->render());
-        $pdf->setPaper([0, 0, env('PAPER_WIDTH_POINTS', 226.77), env('PAPER_HEIGHT_POINTS', 340.16)]);
+        $pdf->setPaper([0, 0, env('PAPER_WIDTH_POINTS', 164.41), env('PAPER_HEIGHT_POINTS', 280)]);
 
         return $pdf->stream("qr-codes-{$orderItem->ord_code_ph}.pdf");
     }

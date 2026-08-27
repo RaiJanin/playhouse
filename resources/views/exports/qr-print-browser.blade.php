@@ -4,11 +4,17 @@
     <meta charset="utf-8">
     <title>QR Codes - {{ $orderItem->ord_code_ph }}</title>
     <style>
+        @page {
+            size: 58mm auto;
+            margin: 0;
+        }
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
+            width: 58mm;
             margin: 0;
-            padding: 10px;
+            padding: 2mm;
+            box-sizing: border-box;
         }
         h1 {
             font-size: 14px;
