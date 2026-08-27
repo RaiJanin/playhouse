@@ -143,19 +143,29 @@
             @endif
         </div>
     </header>
-    <a href="{{ route('playhouse.monitoring') }}" class="text-[var(--color-accent)] font-semibold p-1 bg-[var(--color-primary)] rounded shadow hover:opacity-80 mr-2">
-       <i class="fa-solid fa-arrow-right-long mr-3"></i>Go to monitoring
-    </a>
-    <a href="{{ route('payments.index') }}" class="text-[var(--color-accent)] font-semibold p-1 bg-[var(--color-primary)] rounded shadow hover:opacity-80">
-       <i class="fa-solid fa-cash-register mr-3"></i>Go to payments
-    </a>
+    <div class="flex flex-row items-center gap-4">
+        <div class="flex flex-col justify-start gap-2">
+            <a href="{{ route('playhouse.monitoring') }}" class="text-[var(--color-accent)] font-semibold p-1 bg-[var(--color-primary)] rounded shadow hover:opacity-80 mr-2">
+                <i class="fa-solid fa-arrow-right-long mr-3"></i>Go to monitoring
+            </a>
+            <a href="{{ route('payments.index') }}" class="text-[var(--color-accent)] font-semibold p-1 bg-[var(--color-primary)] rounded shadow hover:opacity-80">
+                <i class="fa-solid fa-cash-register mr-3"></i>Go to payments
+            </a>
+        </div>
+        <button type="button" id="open-new-customer-btn"
+            onclick="window.dispatchEvent(new CustomEvent('open-new-customer-modal'))"
+            class="text-white text-lg font-semibold py-3 px-6 bg-[var(--color-third-full-dark)] rounded shadow hover:opacity-80 mr-2">
+            <i class="fa-solid fa-user-plus mr-2"></i>New Customer
+        </button>
+    </div>
     @include('ui.bookings')
     @include('masterFiles')
 
 @endsection
 
 @include('ui.partials.add-child-modal')
+@include('ui.partials.new-customer-modal')
 
 @section('scripts')
- @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js', 'resources/js/modules/bulkBookingActions.js', 'resources/js/modules/addChildModal.js'])
+ @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js', 'resources/js/modules/bulkBookingActions.js', 'resources/js/modules/addChildModal.js', 'resources/js/modules/newCustomerModal.js'])
 @endsection

@@ -19,6 +19,8 @@ export default defineConfig({
                 "resources/js/modules/payments-list.js",
                 "resources/js/modules/paymentModal.js",
                 "resources/js/modules/bulkBookingActions.js",
+                "resources/js/modules/addChildModal.js",
+                "resources/js/modules/newCustomerModal.js",
             ],
             refresh: true,
         }),

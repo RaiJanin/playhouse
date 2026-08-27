@@ -13,5 +13,6 @@ export const API_ROUTES = {
     ordersURL: '/api/orders',
     chargeAccountsURL: '/api/charge-accounts',
     paymentModesURL: '/api/payment-modes',
-    addChildToOrderURL: '/api/orders'
+    addChildToOrderURL: '/api/orders',
+    newCustomerURL: '/api/new-customer'
 };

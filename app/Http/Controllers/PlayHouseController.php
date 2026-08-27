@@ -328,6 +328,172 @@ class PlayHouseController extends Controller
         }
     }
 
+    /**
+     * POS "New Customer" — creates the parent, children, order and order items in one
+     * shot, mirroring the public registration flow (store()) but without the OTP step.
+     * Backs the New Customer modal on the bookings/POS page and is staff-only.
+     */
+    public function storeNewCustomer(StorePlayhouseFormRequest $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $order = $this->persistNewCustomerOrder(
+                $request->validated(),
+                auth()->user()->name ?? 'admin'
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'ordCodePh' => $order->ord_code_ph,
+                'orderNum' => $order->ord_code_ph,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Shared persistence for a walk-in customer created from the POS.
+     * Assumes it runs inside an open DB transaction and throws on failure.
+     *
+     * @param  array  $data   Validated payload (see StorePlayhouseFormRequest).
+     * @param  string $actor  Name stored on created/updated audit columns.
+     */
+    private function persistNewCustomerOrder(array $data, string $actor): Orders
+    {
+        $parentAsGuardian = '1';
+
+        foreach ($data['child'] as $child) {
+            if (!empty($child['guardianName']) || !empty($child['guardianLastName'])) {
+                $parentAsGuardian = '0';
+                break;
+            }
+        }
+
+        $parsedPhone = $this->formatPhone09($data['phone']);
+
+        $parent = M06::updateOrCreate(['mobileno' => $parsedPhone], [
+            'd_name' => $data['parentName'] . ' ' . $data['parentLastName'],
+            'mkt_code' => $data['mkt_code'] ?? null,
+            'firstname' => $data['parentName'],
+            'lastname' => $data['parentLastName'],
+            'birthday' => $data['parentBirthday'],
+            'mobileno' => $parsedPhone,
+            'email' => $data['parentEmail'] ?? null,
+            'isparent' => true,
+            'isguardian' => $parentAsGuardian,
+            'createdby' => $actor,
+            'updatedby' => $actor,
+        ]);
+
+        $totalPrice = 0;
+        $durationPrices = DurationPrices::pluck('price', 'duration_hour');
+        $socksPrice = ItemsPrices::where('item', 'socks_price')->first();
+
+        $childModels = [];
+
+        foreach ($data['child'] as $index => $child) {
+            $childM = M06Child::updateOrCreate(
+                [
+                    'd_code' => $parent->d_code,
+                    'firstname' => $child['name'],
+                    'birthday' => $child['birthday'],
+                ],
+                [
+                    'lastname' => $parent->lastname,
+                    'age' => Carbon::parse($child['birthday'])->age,
+                    'createdby' => $actor,
+                    'updatedby' => $actor,
+                ]
+            );
+
+            if (!empty($child['photo']) && !$childM->photo) {
+                $photoPath = DecodeBase64File::makeFile(
+                    $child['photo'],
+                    'children_photos',
+                    'child_' . $childM->d_code_c . '_'
+                );
+
+                if ($photoPath) {
+                    $childM->photo = $photoPath;
+                    $childM->save();
+                }
+            }
+
+            if (!empty($child['guardianName']) || !empty($child['guardianLastName'])) {
+                $guardianFullname = trim(($child['guardianName'] ?? '') . ' ' . ($child['guardianLastName'] ?? ''));
+
+                M06Guardian::updateOrCreate(
+                    [
+                        'd_code' => $parent->d_code,
+                        'd_code_c' => $childM->d_code_c,
+                    ],
+                    [
+                        'd_code' => $parent->d_code,
+                        'd_code_c' => $childM->d_code_c,
+                        'd_name' => $guardianFullname,
+                        'firstname' => $child['guardianName'] ?? null,
+                        'lastname' => $child['guardianLastName'] ?? null,
+                        'age' => $child['guardianAge'] ?? null,
+                        'mobileno' => $child['guardianPhone'] ?? null,
+                        'isparent' => false,
+                        'isguardian' => true,
+                        'guardianauthorized' => !empty($child['guardianAuthorized']),
+                        'createdby' => $actor,
+                        'updatedby' => $actor,
+                    ]
+                );
+            }
+
+            $addSocks = (int) ($child['addSocks'] ?? 0);
+            $childprice = ($durationPrices[$child['playDuration']] ?? 0) + ($addSocks * $socksPrice->price);
+            $totalPrice += $childprice;
+
+            $childModels[$index] = $childM;
+        }
+
+        $order = Orders::create([
+            'parent' => $parent->d_name,
+            'mkt_code' => $data['mkt_code'] ?? null,
+            'd_code' => $parent->d_code,
+            'total_amnt' => $totalPrice,
+            'fb_pp_url' => null,
+            'visitdate' => $data['visitDate'] ?? now()->format('Y-m-d'),
+        ]);
+
+        foreach ($data['child'] as $index => $child) {
+            $childModel = $childModels[$index];
+
+            $duration = $child['playDuration'] === 'unlimited' ? '5' : $child['playDuration'];
+            $totalSocks = (int) ($child['addSocks'] ?? 0) + (int) ($child['guardianSocks'] ?? 0);
+            $grdFullName = trim(($child['guardianName'] ?? '') . ' ' . ($child['guardianLastName'] ?? ''));
+            $durationsId = DurationPrices::where('duration_hour', $child['playDuration'])->value('id');
+
+            OrderItems::create([
+                'ord_code_ph' => $order->ord_code_ph,
+                'd_code_child' => $childModel->d_code_c,
+                'guardian' => $grdFullName ?: null,
+                'durationhours' => $duration,
+                'durationsubtotal' => $durationPrices[$child['playDuration']] ?? 0,
+                'socksqty' => $totalSocks,
+                'socksprice' => $totalSocks * $socksPrice->price,
+                'subtotal' => ($durationPrices[$child['playDuration']] ?? 0) + ($totalSocks * $socksPrice->price),
+                'disc_code' => $data['discountCode'] ?? null,
+                'durations_id' => $durationsId,
+            ]);
+        }
+
+        return $order;
+    }
+
     public function makeOtp(Request $request)
     {
         try {
