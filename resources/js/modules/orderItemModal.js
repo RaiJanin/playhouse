@@ -18,7 +18,7 @@ let closeBtn, qrChildEl, qrGuardianEl, qrChildPreviewEl, qrGuardianPreviewEl,
     guardianMobileInput, guardianAgeInput, guardianAuthorizedInput, promoSelect,
     idNumberEl, bookingNumberEl, socksQtyInput, socksMinusBtn, socksPlusBtn,
     hoursEl, playtimeAmountEl, socksAmountEl, othersInput, subtotalEl, discountEl, lineTotalEl,
-    saveBtn, checkoutBtn, checkinBtn, checkoutLabelEl, checkinLabelEl, payBtn, printBtn;
+    saveBtn, checkoutBtn, checkinBtn, checkoutLabelEl, checkinLabelEl, payBtn, printBtn, printBrowserBtn;
 
 /**
  * Formats remaining play time as HH:MM:SS, clamped at 00:00:00.
@@ -100,6 +100,7 @@ function onMount() {
     checkinLabelEl = document.getElementById('order-modal-checkin-label');
     payBtn = document.getElementById('order-modal-pay-btn');
     printBtn = document.getElementById('order-modal-print-btn');
+    printBrowserBtn = document.getElementById('order-modal-print-browser-btn');
 }
 
 function showModal() {
@@ -482,6 +483,51 @@ async function printQrCodes() {
     }
 }
 
+async function printQrBrowser() {
+    if (!currentId) return;
+
+    const childCode = qrChildEl.value.trim();
+    const guardianCode = qrGuardianEl.value.trim();
+
+    if (!childCode && !guardianCode) {
+        App.component.showAlert('No QR codes to print.', 'error');
+        return;
+    }
+
+    printBrowserBtn.disabled = true;
+    try {
+        const response = await fetch(`${API_ROUTES.orderItemURL}/${currentId}/print-qr-browser`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({
+                qr_child_image: getQrDataUrl(qrChildPreviewEl),
+                qr_guardian_image: getQrDataUrl(qrGuardianPreviewEl),
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
+
+        const html = await response.text();
+        const blob = new Blob([html], { type: 'text/html' });
+        const blobUrl = URL.createObjectURL(blob);
+        const printWindow = window.open(blobUrl, '_blank');
+
+        if (!printWindow) {
+            App.component.showAlert('Popup blocked. Please allow popups for this site.', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        App.component.showAlert('Failed to generate QR print page.', 'error');
+    } finally {
+        printBrowserBtn.disabled = false;
+    }
+}
+
 function init() {
     onMount();
     if (!closeBtn) return; // modal partial not on this page
@@ -501,6 +547,7 @@ function init() {
     checkinBtn.addEventListener('click', checkIn);
     payBtn.addEventListener('click', openPaymentModal);
     printBtn.addEventListener('click', printQrCodes);
+    printBrowserBtn.addEventListener('click', printQrBrowser);
 }
 
 document.addEventListener('DOMContentLoaded', init);

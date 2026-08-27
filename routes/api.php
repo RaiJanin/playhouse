@@ -39,6 +39,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::delete('/order-items/{id}/payments/{paymentId}', [PaymentsController::class, 'removePayment']);
     Route::patch('/order-items/{id}/cancel-checkout', [PaymentsController::class, 'cancelCheckout']);
     Route::post('/order-items/{id}/print-qr', [PlayHouseController::class, 'printQr']);
+    Route::post('/order-items/{id}/print-qr-browser', [PlayHouseController::class, 'printQrBrowser']);
     Route::post('/orders/{ordCodePh}/add-child', [PlayHouseController::class, 'addChildToOrder']);
     Route::post('/new-customer', [PlayHouseController::class, 'storeNewCustomer']);
     Route::get('/get-inhouse', [MimoAdminController::class, 'monitoring']);

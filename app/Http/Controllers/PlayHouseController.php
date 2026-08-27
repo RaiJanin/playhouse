@@ -1001,6 +1001,25 @@ class PlayHouseController extends Controller
         return $pdf->stream("qr-codes-{$orderItem->ord_code_ph}.pdf");
     }
 
+    public function printQrBrowser(Request $request, $id)
+    {
+        $data = $request->validate([
+            'qr_child_image' => 'nullable|string',
+            'qr_guardian_image' => 'nullable|string',
+        ]);
+
+        $orderItem = OrderItems::with('child.guardians')->findOrFail($id);
+        $guardian = $orderItem->child?->guardians->first();
+
+        return view('exports.qr-print-browser', [
+            'orderItem' => $orderItem,
+            'child' => $orderItem->child,
+            'guardian' => $guardian,
+            'qrChildImage' => $data['qr_child_image'] ?? null,
+            'qrGuardianImage' => $data['qr_guardian_image'] ?? null,
+        ]);
+    }
+
     public function updateOrderItem(UpdateOrderItemRequest $request, $id)
     {
         $data = $request->validated();
@@ -1123,9 +1142,14 @@ class PlayHouseController extends Controller
             }
         )->whereNull('ckin')->count();
 
-        $totalKids = M06Child::count();
-        $totalGuardians = M06Guardian::count();
+        $totalKids = OrderItems::whereDate('created_at', '>=', $startDate)
+                            ->whereDate('created_at', '<=', $endDate)
+                            ->count();
 
+        $totalGuardians = OrderItems::whereDate('created_at', '>=', $startDate)
+                            ->whereDate('created_at', '<=', $endDate)
+                            ->whereNotNull('guardian')
+                            ->count();
 
         $statusMonitor = [
             'in_house_guardians' => $inHouseGuardians,
@@ -1150,7 +1174,7 @@ class PlayHouseController extends Controller
             }
         }
 
-        $status = $request->get('status');
+        $status = $request->status;
 
         switch($status)
         {

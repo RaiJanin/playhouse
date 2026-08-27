@@ -162,6 +162,10 @@
                 class="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-primary)] font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
                 <i class="fa-solid fa-qrcode mr-1"></i> Print QR
             </button>
+            <button type="button" id="order-modal-print-browser-btn"
+                class="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-primary)] font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
+                <i class="fa-solid fa-print mr-1"></i> Print QR (Browser)
+            </button>
             <button type="button" id="order-modal-save-btn"
                 class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> Save
