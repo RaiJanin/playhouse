@@ -12,5 +12,6 @@ export const API_ROUTES = {
     orderItemURL: '/api/order-items',
     ordersURL: '/api/orders',
     chargeAccountsURL: '/api/charge-accounts',
-    paymentModesURL: '/api/payment-modes'
+    paymentModesURL: '/api/payment-modes',
+    addChildToOrderURL: '/api/orders'
 };

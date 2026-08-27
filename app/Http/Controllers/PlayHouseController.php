@@ -214,6 +214,120 @@ class PlayHouseController extends Controller
 
     }
 
+    public function addChildToOrder(Request $request, $ordCodePh)
+    {
+        $request->validate([
+            'childName' => 'required|string|max:255',
+            'childBirthday' => 'required|date',
+            'playDuration' => 'required|string',
+            'addSocks' => 'required|in:0,1',
+            'guardianName' => 'nullable|string|max:255',
+            'guardianLastName' => 'nullable|string|max:255',
+            'guardianPhone' => 'nullable|string|max:20',
+            'guardianAge' => 'nullable|integer|min:1',
+            'guardianSocks' => 'nullable|in:0,1',
+            'guardianAuthorized' => 'nullable|boolean',
+            'childPhoto' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $order = Orders::where('ord_code_ph', $ordCodePh)->firstOrFail();
+            $parent = M06::where('d_code', $order->d_code)->firstOrFail();
+            
+            $durationHours = $request->playDuration === 'unlimited' ? '5' : $request->playDuration;
+            $durationPrice = DurationPrices::where('duration_hour', $request->playDuration)->first();
+            
+            if (!$durationPrice) {
+                throw new \Exception('Invalid duration selected');
+            }
+
+            $childM = M06Child::updateOrCreate(
+                [
+                    'd_code' => $parent->d_code,
+                    'firstname' => $request->childName,
+                    'birthday' => $request->childBirthday,
+                ],
+                [
+                    'lastname' => $parent->lastname,
+                    'age' => Carbon::parse($request->childBirthday)->age,
+                    'createdby' => $parent->d_name,
+                    'updatedby' => $parent->d_name
+                ]
+            );
+
+            $photoPath = null;
+            $filename = 'child_' . $childM->d_code_c . '_';
+            $folder = 'children_photos';
+
+            if (!empty($request->childPhoto) && !$childM->photo && $childM) {
+                $photoPath = DecodeBase64File::makeFile($request->childPhoto, $folder, $filename);
+                if ($photoPath) {
+                    $childM->photo = $photoPath;
+                    $childM->save();
+                }
+            }
+
+            if ($request->filled('guardianName')) {
+                M06Guardian::updateOrCreate(
+                    [
+                        'd_code' => $parent->d_code,
+                        'd_code_c' => $childM->d_code_c,
+                    ],
+                    [
+                        'd_code' => $parent->d_code,
+                        'd_code_c' => $childM->d_code_c,
+                        'd_name' => trim(($request->guardianName ?? '') . ' ' . ($request->guardianLastName ?? '')),
+                        'firstname' => $request->guardianName,
+                        'lastname' => $request->guardianLastName ?? null,
+                        'age' => $request->guardianAge ?? null,
+                        'mobileno' => $request->guardianPhone ?? null,
+                        'isparent' => false,
+                        'isguardian' => true,
+                        'guardianauthorized' => $request->boolean('guardianAuthorized'),
+                        'createdby' => auth()->user()->name ?? 'admin',
+                        'updatedby' => auth()->user()->name ?? 'admin'
+                    ]
+                );
+            }
+
+            $socksPrice = ItemsPrices::where('item', 'socks_price')->first();
+            $totalSocks = $request->addSocks + ($request->guardianSocks ?? 0);
+            $childPrice = $durationPrice->price + ($totalSocks * $socksPrice->price);
+
+            $orderItem = OrderItems::create([
+                'ord_code_ph' => $order->ord_code_ph,
+                'd_code_child' => $childM->d_code_c,
+                'guardian' => $request->filled('guardianName') ? trim(($request->guardianName ?? '') . ' ' . ($request->guardianLastName ?? '')) : null,
+                'durationhours' => $durationHours,
+                'durationsubtotal' => $durationPrice->price,
+                'socksqty' => $totalSocks,
+                'socksprice' => $totalSocks * $socksPrice->price,
+                'subtotal' => $childPrice,
+                'durations_id' => $durationPrice->id
+            ]);
+
+            $order->total_amnt += $childPrice;
+            $order->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'orderItem' => $orderItem->load('child', 'child.guardians'),
+                'order' => $order->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function makeOtp(Request $request)
     {
         try {
@@ -894,7 +1008,7 @@ class PlayHouseController extends Controller
         );
 
         $orderItems = $query->select([
-                'id', 'd_code_child', 'ord_code_ph', 'ckin', 'ckout', 'durationhours', 'qr_child', 'qr_guardian', 'is_paid'
+                'id', 'd_code_child', 'ord_code_ph', 'ckin', 'ckout', 'durationhours', 'qr_child', 'qr_guardian', 'is_paid', 'bkin', 'bkout', 'isfreeze'
             ])->with([
                 'child:d_code_c,firstname,lastname',
                 'order:ord_code_ph,d_code',
@@ -950,6 +1064,17 @@ class PlayHouseController extends Controller
                     {
                         $ckin = Carbon::parse($item->ckin);
                         $elapsedMinutes = $ckin->diffInMinutes($now);
+
+                        $breakMinutes = 0;
+                        if ($item->bkin) {
+                            if ($item->bkout) {
+                                $breakMinutes += Carbon::parse($item->bkin)->diffInMinutes(Carbon::parse($item->bkout));
+                            } else {
+                                $breakMinutes += Carbon::parse($item->bkin)->diffInMinutes($now);
+                            }
+                        }
+
+                        $elapsedMinutes = max(0, $elapsedMinutes - $breakMinutes);
                         $totalMinutes = $item->durationhours * 60;
 
                         $remainingMinutes = max(0, $totalMinutes - $elapsedMinutes);
@@ -958,12 +1083,15 @@ class PlayHouseController extends Controller
                         $minutes = $remainingMinutes % 60;
                         $item->remainmins = "{$hours}hr {$minutes}min";
 
-                        $due = $ckin->copy()->addHours($item->durationhours);
-                        if ($now->lt($due)) {
+                        $isOnBreak = !empty($item->bkin) && empty($item->bkout);
+                        $due = $ckin->copy()->addHours($item->durationhours)->addMinutes($breakMinutes);
+                        if ($isOnBreak) {
+                            $item->status = "normal";
+                        } else if ($now->lt($due)) {
                             $item->status = "normal";
                         } else {
                             $lateMinutes = $due->diffInMinutes($now);
-                            $item->status = $lateMinutes <= 10 ? "due" : "overdue";
+                            $item->status = $lateMinutes <= 5 ? "due" : "overdue";
                         }
                     }
                     else if(!empty($item->ckin) && !empty($item->ckout))
@@ -985,7 +1113,7 @@ class PlayHouseController extends Controller
 
 
 
-    private function formatPhone09($phonenum)
+    private function formatPhone09(string $phonenum)
     {
         $phoneInput = preg_replace('/[^0-9]/', '', $phonenum);
         $finalNum = $phoneInput;

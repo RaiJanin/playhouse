@@ -104,6 +104,12 @@
                     </div>
 
                     <div class="justify-end flex flex-wrap gap-2 pt-3 mt-3 border-t border-white/20">
+                        <button type="button" id="booking-add-child-btn"
+                            data-ord-code="{{ $searchedOrder->ord_code_ph }}"
+                            onclick="window.dispatchEvent(new CustomEvent('open-add-child-modal', { detail: { ordCodePh: '{{ $searchedOrder->ord_code_ph }}' } }))"
+                            class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-teal-600 text-white hover:opacity-80 transition-all duration-300">
+                            <i class="fa-solid fa-child mr-1"></i> Add Child
+                        </button>
                         <button hidden type="button" id="booking-check-in-all-btn"
                             data-ord-code="{{ $searchedOrder->ord_code_ph }}"
                             data-pending='@json($pendingCheckIn->map(fn ($item) => [
@@ -148,6 +154,8 @@
 
 @endsection
 
+@include('ui.partials.add-child-modal')
+
 @section('scripts')
- @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js', 'resources/js/modules/bulkBookingActions.js'])
+ @vite(['resources/js/modules/orderItemModal.js', 'resources/js/modules/paymentModal.js', 'resources/js/modules/bulkBookingActions.js', 'resources/js/modules/addChildModal.js'])
 @endsection

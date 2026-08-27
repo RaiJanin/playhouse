@@ -16,8 +16,8 @@ let closeBtn, qrChildEl, qrGuardianEl, qrChildPreviewEl, qrGuardianPreviewEl,
     loadingEl, bodyEl, childCodeEl, childNameEl, childAgeInput, durationSelect,
     startTimeEl, endTimeEl, outForBreakInput, inFromBreakInput, guardianNameInput,
     guardianMobileInput, guardianAgeInput, guardianAuthorizedInput, promoSelect,
-    idNumberEl, bookingNumberEl, socksQtyInput, hoursEl, playtimeAmountEl,
-    socksAmountEl, othersInput, subtotalEl, discountEl, lineTotalEl,
+    idNumberEl, bookingNumberEl, socksQtyInput, socksMinusBtn, socksPlusBtn,
+    hoursEl, playtimeAmountEl, socksAmountEl, othersInput, subtotalEl, discountEl, lineTotalEl,
     saveBtn, checkoutBtn, checkinBtn, checkoutLabelEl, checkinLabelEl, payBtn, printBtn;
 
 /**
@@ -38,7 +38,18 @@ function formatCountdown(ckin, durationHours) {
 
     const paidMs = Number(durationHours || 0) * 60 * 60 * 1000;
     const elapsedMs = Date.now() - new Date(ckin).getTime();
-    const remainingMs = Math.max(0, paidMs - elapsedMs);
+
+    let breakMs = 0;
+    if (orderItem.bkin) {
+        if (orderItem.bkout) {
+            breakMs += new Date(orderItem.bkout).getTime() - new Date(orderItem.bkin).getTime();
+        } else {
+            breakMs += Date.now() - new Date(orderItem.bkin).getTime();
+        }
+    }
+
+    const adjustedElapsedMs = Math.max(0, elapsedMs - breakMs);
+    const remainingMs = Math.max(0, paidMs - adjustedElapsedMs);
 
     const totalSeconds = Math.floor(remainingMs / 1000);
     const hh = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
@@ -353,8 +364,6 @@ async function checkOut() {
 }
 
 async function checkIn() {
-    console.log('QR to check in: '+qrChildEl.value.trim())
-
     if (saving || !currentId || orderItem.checked_out) return;
     saving = true;
     saveBtn.disabled = true;
@@ -367,8 +376,6 @@ async function checkIn() {
 
     try {
         const response = await submitData(API_ROUTES.checkInURL, checkinPayload, 'POST', currentId);
-
-        console.log(response);
 
         if (!response.success) {
             App.component.showAlert(response.message || 'Checkin failed.', 'error');

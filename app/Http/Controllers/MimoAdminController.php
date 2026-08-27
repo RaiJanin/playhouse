@@ -151,6 +151,9 @@ class MimoAdminController extends Controller
                     'durationhours',
                     'qr_child',
                     'qr_guardian',
+                    'bkin',
+                    'bkout',
+                    'isfreeze'
                 ])->with([
                     'child:d_code_c,firstname,lastname',
                     'order:ord_code_ph,d_code',
@@ -187,6 +190,17 @@ class MimoAdminController extends Controller
                     {
                         $ckin = Carbon::parse($item->ckin);
                         $elapsedMinutes = $ckin->diffInMinutes($now);
+
+                        $breakMinutes = 0;
+                        if ($item->bkin) {
+                            if ($item->bkout) {
+                                $breakMinutes += Carbon::parse($item->bkin)->diffInMinutes(Carbon::parse($item->bkout));
+                            } else {
+                                $breakMinutes += Carbon::parse($item->bkin)->diffInMinutes($now);
+                            }
+                        }
+
+                        $elapsedMinutes = max(0, $elapsedMinutes - $breakMinutes);
                         $totalMinutes = $item->durationhours * 60;
 
                         $remainingMinutes = max(0, $totalMinutes - $elapsedMinutes);
@@ -202,12 +216,23 @@ class MimoAdminController extends Controller
                         $item->status = "due";
                     }
 
-                    if(!$item->ckout)
+                    if(!$item->ckout && !(!empty($item->bkin) && empty($item->bkout)))
                     {
                         $checkin = Carbon::parse($item->ckin);
                         $due = $checkin->copy()->addHours($item->durationhours);
 
-                        $lateMinutes = $due->diffInMinutes($now);
+                        $breakMinutes = 0;
+                        if ($item->bkin) {
+                            if ($item->bkout) {
+                                $breakMinutes += Carbon::parse($item->bkin)->diffInMinutes(Carbon::parse($item->bkout));
+                            } else {
+                                $breakMinutes += Carbon::parse($item->bkin)->diffInMinutes(Carbon::now());
+                            }
+                        }
+
+                        $due = $due->addMinutes($breakMinutes);
+
+                        $lateMinutes = $due->diffInMinutes(Carbon::now());
 
                         if ($lateMinutes <= 30) {
                             $item->status = "due";
