@@ -35,8 +35,8 @@
             margin: 0 0 6px;
         }
         .qr-block img {
-            width: 120px;
-            height: 120px;
+            width: 60px;
+            height: 60px;
         }
         .qr-block .name {
             font-weight: bold;
