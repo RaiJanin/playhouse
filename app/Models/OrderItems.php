@@ -75,4 +75,45 @@ class OrderItems extends Model
         return $this->hasMany(OrderPayment::class, 'ordlne_ph_id');
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function (self $orderItem) {
+            $reserved = [];
+
+            if (empty($orderItem->qr_child)) {
+                $orderItem->qr_child = self::generateUniqueQrNumber($reserved);
+                $reserved[] = $orderItem->qr_child;
+            }
+
+            if (empty($orderItem->qr_guardian)) {
+                $orderItem->qr_guardian = self::generateUniqueQrNumber($reserved);
+                $reserved[] = $orderItem->qr_guardian;
+            }
+        });
+    }
+
+    /**
+     * Random, zero-padded 6-digit QR code, unique across every row's
+     * qr_child AND qr_guardian — turnstile lookups match against both
+     * columns (see TurnstileController::turnstileSrchPOST), so a code
+     * reused across columns would make a physical wristband scan ambiguous.
+     * $reserved excludes codes already handed out earlier in the same
+     * boot(creating) call, since the sibling column isn't saved yet to be
+     * caught by the DB uniqueness check below.
+     */
+    private static function generateUniqueQrNumber(array $reserved = []): string
+    {
+        do {
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        } while (
+            in_array($code, $reserved, true)
+            || self::where('qr_child', $code)->exists()
+            || self::where('qr_guardian', $code)->exists()
+        );
+
+        return $code;
+    }
+
 }

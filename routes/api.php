@@ -38,6 +38,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::patch('/orders/{ordCodePh}/pay-all', [PaymentsController::class, 'payAll']);
     Route::delete('/order-items/{id}/payments/{paymentId}', [PaymentsController::class, 'removePayment']);
     Route::patch('/order-items/{id}/cancel-checkout', [PaymentsController::class, 'cancelCheckout']);
+    Route::get('/order-items/{id}/print-receipt', [PaymentsController::class, 'printReceipt']);
+    Route::get('/orders/{ordCodePh}/print-receipt', [PaymentsController::class, 'printOrderReceipt']);
     Route::post('/order-items/{id}/print-qr', [PlayHouseController::class, 'printQr']);
     Route::post('/order-items/{id}/print-qr-browser', [PlayHouseController::class, 'printQrBrowser']);
     Route::post('/orders/{ordCodePh}/add-child', [PlayHouseController::class, 'addChildToOrder']);

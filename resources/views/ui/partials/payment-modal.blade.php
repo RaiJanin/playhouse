@@ -104,6 +104,12 @@
 
                 <div id="payment-modal-paid-section" class="hidden text-base text-gray-800 space-y-1 border-t pt-2 mt-2">
                     <div class="flex justify-between font-bold text-green-700"><span>Fully Paid</span><span id="payment-modal-paid-at" class="font-medium"></span></div>
+                    <div class="flex justify-end pt-1">
+                        <button type="button" id="payment-modal-print-receipt-btn"
+                            class="px-3 py-1.5 text-sm font-semibold rounded-lg bg-[var(--color-primary)] text-white hover:opacity-80 transition-all duration-300">
+                            <i class="fa-solid fa-print mr-1"></i> Print Receipt
+                        </button>
+                    </div>
                 </div>
 
                 <p id="payment-modal-not-ready" class="hidden text-base text-gray-500 italic mt-4">

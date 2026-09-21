@@ -22,7 +22,7 @@ let closeBtn, childNameEl, parentNameEl, bookingNumberEl, loadingEl, bodyEl,
     unpaidSection, methodSelect, cashFields, cashInput, changeEl,
     amountFields, amountInput, chargeFields, chargeAccountInput, chargeAccountsDatalist,
     referenceInput, remarksInput,
-    paidSection, paidAtEl, notReadyEl, actionsEl, payBtn, cancelBtn;
+    paidSection, paidAtEl, printReceiptBtn, notReadyEl, actionsEl, payBtn, cancelBtn;
 
 function onMount() {
     closeBtn = document.getElementById('payment-modal-close-btn');
@@ -61,6 +61,7 @@ function onMount() {
     remarksInput = document.getElementById('payment-modal-remarks-input');
     paidSection = document.getElementById('payment-modal-paid-section');
     paidAtEl = document.getElementById('payment-modal-paid-at');
+    printReceiptBtn = document.getElementById('payment-modal-print-receipt-btn');
     notReadyEl = document.getElementById('payment-modal-not-ready');
     actionsEl = document.getElementById('payment-modal-actions');
     payBtn = document.getElementById('payment-modal-pay-btn');
@@ -77,6 +78,19 @@ function closeModal() {
 
 function money(value) {
     return `₱${Number(value || 0).toFixed(2)}`;
+}
+
+/**
+ * Opens the printable receipt for a single order item in a new tab; it
+ * auto-triggers window.print() once loaded. Safe to call any number of times
+ * (e.g. the "Print Receipt" button in the paid section for reprints).
+ */
+function printReceipt(id) {
+    if (!id) return;
+    const printWindow = window.open(`${API_ROUTES.orderItemURL}/${id}/print-receipt`, '_blank');
+    if (!printWindow) {
+        App.component.showAlert('Popup blocked. Please allow popups for this site to print the receipt.', 'error');
+    }
 }
 
 function escapeHtml(value) {
@@ -313,6 +327,7 @@ async function addPayment() {
         }
         const data = await refresh();
         if (data.is_paid) {
+            printReceipt(currentId);
             setTimeout(() => window.location.reload(), 800);
         }
     } catch (err) {
@@ -379,6 +394,7 @@ function init() {
     cashInput.addEventListener('input', recomputeChange);
     payBtn.addEventListener('click', addPayment);
     cancelBtn.addEventListener('click', cancelCheckout);
+    printReceiptBtn.addEventListener('click', () => printReceipt(currentId));
 }
 
 document.addEventListener('DOMContentLoaded', init);

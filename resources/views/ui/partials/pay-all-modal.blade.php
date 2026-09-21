@@ -9,6 +9,7 @@
         </div>
 
         <div class="p-6 bg-[var(--color-primary-transparent)]">
+          <div id="pay-all-form-section">
             <div class="flex justify-between items-center mb-4">
                 <span class="text-base text-gray-700">Booking# <span id="pay-all-booking-number" class="font-bold text-gray-900"></span></span>
                 <span class="text-base text-gray-700"><span id="pay-all-items-count" class="font-bold text-gray-900"></span> unpaid child(ren)</span>
@@ -61,17 +62,36 @@
                     </div>
                 </div>
             </div>
+          </div>
+
+          <div id="pay-all-success-section" class="hidden text-center py-6">
+              <i class="fa-solid fa-circle-check text-5xl text-green-600 mb-3"></i>
+              <p class="text-lg font-bold text-gray-900 mb-1">Payment Recorded</p>
+              <p id="pay-all-success-summary" class="text-sm text-gray-600"></p>
+          </div>
         </div>
 
         <div class="flex justify-end gap-2 py-3 px-6 bg-[var(--color-primary-transparent)]">
-            <button type="button" id="pay-all-cancel-btn"
-                class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300">
-                Cancel
-            </button>
-            <button type="button" id="pay-all-submit-btn"
-                class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
-                <i class="fa-solid fa-money-bill-wave mr-1"></i> Pay All
-            </button>
+            <div id="pay-all-form-actions" class="flex gap-2">
+                <button type="button" id="pay-all-cancel-btn"
+                    class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300">
+                    Cancel
+                </button>
+                <button type="button" id="pay-all-submit-btn"
+                    class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300 disabled:opacity-50">
+                    <i class="fa-solid fa-money-bill-wave mr-1"></i> Pay All
+                </button>
+            </div>
+            <div id="pay-all-success-actions" class="hidden gap-2">
+                <button type="button" id="pay-all-print-receipt-btn"
+                    class="px-4 py-2 bg-[var(--color-primary)] text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300">
+                    <i class="fa-solid fa-print mr-1"></i> Print Receipt
+                </button>
+                <button type="button" id="pay-all-done-btn"
+                    class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:opacity-80 transition-all duration-300">
+                    <i class="fa-solid fa-check mr-1"></i> Done
+                </button>
+            </div>
         </div>
     </div>
 </x-breeze-modal>

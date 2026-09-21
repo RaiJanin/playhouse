@@ -108,6 +108,21 @@ function initCheckOutAll() {
     });
 }
 
+/**
+ * Opens the printable receipt covering the items paid in one Pay All action
+ * (or, with no item ids, every paid item on the booking) in a new tab; it
+ * auto-triggers window.print() once loaded. Safe to call repeatedly — backs
+ * both the automatic print-on-success and the "Print Receipt" reprint button.
+ */
+function printOrderReceipt(ordCode, itemIds) {
+    if (!ordCode) return;
+    const query = itemIds && itemIds.length ? `?items=${itemIds.join(',')}` : '';
+    const printWindow = window.open(`${API_ROUTES.ordersURL}/${ordCode}/print-receipt${query}`, '_blank');
+    if (!printWindow) {
+        App.component.showAlert('Popup blocked. Please allow popups for this site to print the receipt.', 'error');
+    }
+}
+
 function initPayAll() {
     const btn = document.getElementById('booking-pay-all-btn');
     if (!btn) return;
@@ -116,11 +131,37 @@ function initPayAll() {
     const totalDue = btn.dataset.totalDue;
     const itemsCount = btn.dataset.itemsCount;
 
+    let lastPaidItemIds = [];
+
+    const formSection = document.getElementById('pay-all-form-section');
+    const successSection = document.getElementById('pay-all-success-section');
+    const successSummary = document.getElementById('pay-all-success-summary');
+    const formActions = document.getElementById('pay-all-form-actions');
+    const successActions = document.getElementById('pay-all-success-actions');
+
+    function showFormState() {
+        formSection.classList.remove('hidden');
+        successSection.classList.add('hidden');
+        formActions.classList.remove('hidden');
+        successActions.classList.add('hidden');
+        successActions.classList.remove('flex');
+    }
+
+    function showSuccessState(response) {
+        formSection.classList.add('hidden');
+        successSection.classList.remove('hidden');
+        formActions.classList.add('hidden');
+        successActions.classList.remove('hidden');
+        successActions.classList.add('flex');
+        successSummary.textContent = `${response.items_paid} child(ren) fully paid — ₱${Number(response.total_applied || 0).toFixed(2)} applied.`;
+    }
+
     btn.addEventListener('click', () => {
         document.getElementById('pay-all-booking-number').textContent = ordCode;
         document.getElementById('pay-all-items-count').textContent = itemsCount;
         document.getElementById('pay-all-total-due').textContent = '₱' + Number(totalDue).toFixed(2);
 
+        showFormState();
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'pay-all-modal' }));
         loadPaymentModes();
     });
@@ -128,6 +169,8 @@ function initPayAll() {
     const closeBtn = document.getElementById('pay-all-close-btn');
     const cancelBtn = document.getElementById('pay-all-cancel-btn');
     const submitBtn = document.getElementById('pay-all-submit-btn');
+    const printReceiptBtn = document.getElementById('pay-all-print-receipt-btn');
+    const doneBtn = document.getElementById('pay-all-done-btn');
     const methodSelect = document.getElementById('pay-all-method-select');
     const cashFields = document.getElementById('pay-all-cash-fields');
     const amountFields = document.getElementById('pay-all-amount-fields');
@@ -184,6 +227,11 @@ function initPayAll() {
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             window.dispatchEvent(new CustomEvent('close-modal', { detail: 'pay-all-modal' }));
+            // Payment already went through if the success panel is showing — reload
+            // so the booking card reflects it instead of leaving stale data on screen.
+            if (!successSection.classList.contains('hidden')) {
+                window.location.reload();
+            }
         });
     }
 
@@ -258,8 +306,9 @@ function initPayAll() {
 
                 if (response.success) {
                     App.component.showAlert('Payment recorded.', 'success');
-                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'pay-all-modal' }));
-                    setTimeout(() => window.location.reload(), 800);
+                    lastPaidItemIds = response.paid_item_ids || [];
+                    printOrderReceipt(ordCode, lastPaidItemIds);
+                    showSuccessState(response);
                 } else {
                     App.component.showAlert(response.message || 'Payment failed.', 'error');
                 }
@@ -269,6 +318,17 @@ function initPayAll() {
                 saving = false;
                 submitBtn.disabled = false;
             }
+        });
+    }
+
+    if (printReceiptBtn) {
+        printReceiptBtn.addEventListener('click', () => printOrderReceipt(ordCode, lastPaidItemIds));
+    }
+
+    if (doneBtn) {
+        doneBtn.addEventListener('click', () => {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'pay-all-modal' }));
+            window.location.reload();
         });
     }
 }

@@ -355,6 +355,7 @@ class PaymentsController extends Controller
                 'items_partial' => $partiallyPaidCount,
                 'total_applied' => $amountToApply,
                 'change_amnt' => $changeAmnt,
+                'paid_item_ids' => $paidItemIds,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -419,6 +420,101 @@ class PaymentsController extends Controller
 
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Browser-printable thermal receipt for a single order item, opened right
+     * after PaymentsController::pay() succeeds (and reusable any time after —
+     * see the "Print Receipt" button in the paid section of the payment modal).
+     */
+    public function printReceipt($id)
+    {
+        $orderItem = OrderItems::with([
+            'child',
+            'order.parentPl',
+            'payments' => fn ($q) => $q->with('chargeAccount:id,name')->orderBy('paid_at'),
+        ])->findOrFail($id);
+
+        $customer = $orderItem->order?->parentPl?->d_name ?? $orderItem->guardian ?? $orderItem->order?->parent;
+
+        return $this->renderReceipt($orderItem->ord_code_ph, $customer, collect([$orderItem]));
+    }
+
+    /**
+     * Browser-printable thermal receipt covering every order item paid in one
+     * Pay All action (or, with no `items` query param, every paid item on the
+     * booking). Opened right after PaymentsController::payAll() succeeds, and
+     * reusable any time after by passing the same `items` list again.
+     */
+    public function printOrderReceipt(Request $request, $ordCodePh)
+    {
+        $order = Orders::where('ord_code_ph', $ordCodePh)->with('parentPl')->firstOrFail();
+
+        $itemIds = collect(explode(',', (string) $request->query('items', '')))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter()
+            ->values();
+
+        $itemsQuery = OrderItems::with([
+            'child',
+            'payments' => fn ($q) => $q->with('chargeAccount:id,name')->orderBy('paid_at'),
+        ])->where('ord_code_ph', $ordCodePh);
+
+        $orderItems = $itemIds->isNotEmpty()
+            ? $itemsQuery->whereIn('id', $itemIds)->get()
+            : $itemsQuery->where('is_paid', true)->get();
+
+        if ($orderItems->isEmpty()) {
+            abort(404, 'No paid items found for this booking.');
+        }
+
+        $customer = $order->parentPl?->d_name ?? $order->parent;
+
+        return $this->renderReceipt($ordCodePh, $customer, $orderItems);
+    }
+
+    /**
+     * Shared receipt view-model builder for printReceipt() / printOrderReceipt().
+     * $orderItems must already be paid (or at least have payments recorded).
+     */
+    private function renderReceipt(string $ordCodePh, ?string $customer, \Illuminate\Support\Collection $orderItems)
+    {
+        $lines = $orderItems->map(function (OrderItems $item) {
+            return [
+                'name' => trim(($item->child->firstname ?? '') . ' ' . ($item->child->lastname ?? '')) ?: 'Child',
+                'duration_label' => (int) $item->durationhours === 5 ? 'Unlimited' : $item->durationhours . ' hr(s)',
+                'duration_amount' => (float) $item->durationsubtotal,
+                'socks_qty' => (int) $item->socksqty,
+                'socks_amount' => (float) $item->socksprice,
+                'others_amount' => (float) $item->others_amnt,
+                'discount_amount' => (float) $item->disc_amnt,
+                'extra_amount' => (float) $item->lne_xtra_chrg,
+                'subtotal' => $this->amountDue($item),
+            ];
+        });
+
+        $payments = $orderItems->flatMap(fn (OrderItems $item) => $item->payments)->sortBy('paid_at')->values();
+
+        $paymentModeLabels = PaymentMode::pluck('mp_desc', 'mp_code');
+        $paymentModeLabels[PaymentMode::CHARGE_CODE] = 'Charge to Account';
+
+        $references = $orderItems->map(fn (OrderItems $item) => 'SO#-' . $item->ord_code_ph . '-' . $item->id);
+        $receiptNo = OfficialReceipt::whereIn('reference', $references)->pluck('ord_code')->implode(', ') ?: null;
+
+        return view('exports.receipt-print', [
+            'ordCodePh' => $ordCodePh,
+            'customer' => $customer,
+            'items' => $lines,
+            'payments' => $payments,
+            'paymentModeLabels' => $paymentModeLabels,
+            'totalDue' => round((float) $lines->sum('subtotal'), 2),
+            'totalPaid' => round((float) $payments->sum('amount'), 2),
+            'totalTendered' => round((float) $payments->sum(fn ($p) => $p->cash_tendered ?? 0), 2),
+            'totalChange' => round((float) $payments->sum(fn ($p) => $p->change_amnt ?? 0), 2),
+            'paidAt' => $orderItems->max('paid_at'),
+            'receiptNo' => $receiptNo,
+            'cashier' => auth()->user()->name ?? 'Staff',
+        ]);
     }
 
     private function amountDue(OrderItems $item): float
