@@ -1,7 +1,7 @@
 <div class="mb-2">
-    <h1 class="text-3xl font-bold text-gray-800">Bookings</h1>
+    <h1 class="text-3xl font-bold text-gray-800">Admin Panel</h1>
     <a href="{{ route('playhouse.bookings') }}" target="_blank" class="text-sm underline text-gray-800 font-semibold p-1 hover:opacity-80">
-        <i class="fa-solid fa-arrow-right-long mr-3"></i>Visit bookings and monitoring
+        <i class="fa-solid fa-arrow-right-long mr-3"></i>Access admin for cashiers
     </a>
 </div>
 <div class="p-4">
